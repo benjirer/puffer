@@ -12,7 +12,7 @@
 	url = https://github.com/StanfordSNR/pensieve.git
 [submodule "third_party/abr_rl_test"]
 	path = third_party/abr_rl_test
-	url = https://github.com/sagar-pa/abr_rl_test.git
+	url = https://github.com/benjirer/abr_rl_test.git
 [submodule "third_party/causalsim_rl_deploy"]
 	path = third_party/causalsim_rl_deploy
 	url = https://github.com/pouyahmdn/causalsim_rl_deploy.git
