@@ -54,11 +54,11 @@ function ControlBar() {
     }
   }
 
-  volume_bar.oninput = function() {
+  volume_bar.oninput = function () {
     set_video_volume(Number(volume_bar.value));
   };
 
-  mute_button.onclick = function() {
+  mute_button.onclick = function () {
     if (mute_button.muted) {
       set_video_volume(last_volume_before_mute);
     } else {
@@ -67,7 +67,7 @@ function ControlBar() {
     }
   };
 
-  unmute_here.onclick = function() {
+  unmute_here.onclick = function () {
     set_video_volume(1);
   };
 
@@ -89,16 +89,16 @@ function ControlBar() {
     clearTimeout(control_bar_timeout);
     show_control_bar();
 
-    control_bar_timeout = setTimeout(function() {
+    control_bar_timeout = setTimeout(function () {
       hide_control_bar();
     }, 3000);
   }
 
-  tv_container.onmousemove = function() {
+  tv_container.onmousemove = function () {
     show_control_bar_briefly();
   };
 
-  tv_container.onmouseleave = function() {
+  tv_container.onmouseleave = function () {
     tv_controls.style.opacity = '0';
   };
 
@@ -113,9 +113,9 @@ function ControlBar() {
     show_control_bar_briefly();
 
     var isInFullScreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
-        (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
-        (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
-        (document.msFullscreenElement && document.msFullscreenElement !== null);
+      (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+      (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+      (document.msFullscreenElement && document.msFullscreenElement !== null);
 
     if (!isInFullScreen) {
       full_screen_button.style.backgroundImage = exit_fullscreen_img;
@@ -151,7 +151,7 @@ function ControlBar() {
   const LOWERCASE_F = 70;
   const UPPERCASE_F = 102;
 
-  this.onkeydown = function(e) {
+  this.onkeydown = function (e) {
     if (e.keyCode === LOWERCASE_F || e.keyCode === UPPERCASE_F) {
       toggle_full_screen();
     } else if (e.keyCode === LEFT_ARROW || e.keyCode === RIGHT_ARROW) {
@@ -174,7 +174,7 @@ function ChannelBar() {
 
   /* find the current channel */
   var channel_list = document.querySelectorAll('#channel-list .list-group-item');
-  var active_idx = 0;  // index of the active channel
+  var active_idx = Math.floor(Math.random() * 3);  // index of the active channel
 
   /* restore the previously watched channel if there is any */
   if (window.name) {
@@ -193,7 +193,7 @@ function ChannelBar() {
   console.log('Initial channel:', curr_channel_name);
   window.name = curr_channel_name;  // save current channel in window.name
 
-  this.get_curr_channel = function() {
+  this.get_curr_channel = function () {
     return curr_channel_name;
   };
 
@@ -228,14 +228,14 @@ function ChannelBar() {
 
   /* set up onclick callbacks for channels */
   for (var i = 0; i < channel_list.length; i++) {
-    channel_list[i].onclick = (function(i) {
-      return function() {
+    channel_list[i].onclick = (function (i) {
+      return function () {
         change_channel(i);
       };
     })(i);
   }
 
-  this.onkeydown = function(e) {
+  this.onkeydown = function (e) {
     if (e.keyCode === DOWN_ARROW) {
       change_channel(active_idx + 1);
     } else if (e.keyCode === UP_ARROW) {
@@ -285,7 +285,7 @@ function get_client_system_info() {
   }
   // Other browsers
   else if ((nameOffset = nAgt.lastIndexOf(' ') + 1)
-           < (verOffset = nAgt.lastIndexOf('/'))) {
+    < (verOffset = nAgt.lastIndexOf('/'))) {
     browser = nAgt.substring(nameOffset, verOffset);
     if (browser.toLowerCase() === browser.toUpperCase()) {
       browser = navigator.appName;
@@ -295,32 +295,32 @@ function get_client_system_info() {
   // OS
   var os = 'unknown';
   var clientStrings = [
-    {s:'Windows 10', r:/(Windows 10.0|Windows NT 10.0)/},
-    {s:'Windows 8.1', r:/(Windows 8.1|Windows NT 6.3)/},
-    {s:'Windows 8', r:/(Windows 8|Windows NT 6.2)/},
-    {s:'Windows 7', r:/(Windows 7|Windows NT 6.1)/},
-    {s:'Windows Vista', r:/Windows NT 6.0/},
-    {s:'Windows Server 2003', r:/Windows NT 5.2/},
-    {s:'Windows XP', r:/(Windows NT 5.1|Windows XP)/},
-    {s:'Windows 2000', r:/(Windows NT 5.0|Windows 2000)/},
-    {s:'Windows ME', r:/(Win 9x 4.90|Windows ME)/},
-    {s:'Windows 98', r:/(Windows 98|Win98)/},
-    {s:'Windows 95', r:/(Windows 95|Win95|Windows_95)/},
-    {s:'Windows NT 4.0', r:/(Windows NT 4.0|WinNT4.0|WinNT|Windows NT)/},
-    {s:'Windows CE', r:/Windows CE/},
-    {s:'Windows 3.11', r:/Win16/},
-    {s:'Android', r:/Android/},
-    {s:'Open BSD', r:/OpenBSD/},
-    {s:'Sun OS', r:/SunOS/},
-    {s:'Linux', r:/(Linux|X11)/},
-    {s:'iOS', r:/(iPhone|iPad|iPod)/},
-    {s:'Mac OS X', r:/Mac OS X/},
-    {s:'Mac OS', r:/(MacPPC|MacIntel|Mac_PowerPC|Macintosh)/},
-    {s:'QNX', r:/QNX/},
-    {s:'UNIX', r:/UNIX/},
-    {s:'BeOS', r:/BeOS/},
-    {s:'OS/2', r:/OS\/2/},
-    {s:'Search Bot', r:/(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/}
+    { s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/ },
+    { s: 'Windows 8.1', r: /(Windows 8.1|Windows NT 6.3)/ },
+    { s: 'Windows 8', r: /(Windows 8|Windows NT 6.2)/ },
+    { s: 'Windows 7', r: /(Windows 7|Windows NT 6.1)/ },
+    { s: 'Windows Vista', r: /Windows NT 6.0/ },
+    { s: 'Windows Server 2003', r: /Windows NT 5.2/ },
+    { s: 'Windows XP', r: /(Windows NT 5.1|Windows XP)/ },
+    { s: 'Windows 2000', r: /(Windows NT 5.0|Windows 2000)/ },
+    { s: 'Windows ME', r: /(Win 9x 4.90|Windows ME)/ },
+    { s: 'Windows 98', r: /(Windows 98|Win98)/ },
+    { s: 'Windows 95', r: /(Windows 95|Win95|Windows_95)/ },
+    { s: 'Windows NT 4.0', r: /(Windows NT 4.0|WinNT4.0|WinNT|Windows NT)/ },
+    { s: 'Windows CE', r: /Windows CE/ },
+    { s: 'Windows 3.11', r: /Win16/ },
+    { s: 'Android', r: /Android/ },
+    { s: 'Open BSD', r: /OpenBSD/ },
+    { s: 'Sun OS', r: /SunOS/ },
+    { s: 'Linux', r: /(Linux|X11)/ },
+    { s: 'iOS', r: /(iPhone|iPad|iPod)/ },
+    { s: 'Mac OS X', r: /Mac OS X/ },
+    { s: 'Mac OS', r: /(MacPPC|MacIntel|Mac_PowerPC|Macintosh)/ },
+    { s: 'QNX', r: /QNX/ },
+    { s: 'UNIX', r: /UNIX/ },
+    { s: 'BeOS', r: /BeOS/ },
+    { s: 'OS/2', r: /OS\/2/ },
+    { s: 'Search Bot', r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/ }
   ];
   for (var id in clientStrings) {
     var cs = clientStrings[id];
@@ -435,29 +435,29 @@ function init_player(params_json, csrf_token) {
   var control_bar = new ControlBar();
   var channel_bar = new ChannelBar();
 
-  document.onkeydown = function(e) {
+  document.onkeydown = function (e) {
     e = e || window.event;
 
     /* prevent the default behaviors of arrow keys */
     if (e.keyCode == UP_ARROW || e.keyCode == DOWN_ARROW ||
-        e.keyCode == LEFT_ARROW || e.keyCode == RIGHT_ARROW)
+      e.keyCode == LEFT_ARROW || e.keyCode == RIGHT_ARROW)
       e.preventDefault();
 
     control_bar.onkeydown(e);
     channel_bar.onkeydown(e);
   };
 
-  load_script('/static/puffer/js/puffer.js').onload = function() {
+  load_script('/static/puffer/js/puffer.js').onload = function () {
     var ws_client = new WebSocketClient(
       session_key, username, settings_debug, port, csrf_token, sysinfo);
 
-    channel_bar.on_channel_change = function(new_channel) {
+    channel_bar.on_channel_change = function (new_channel) {
       ws_client.set_channel(new_channel);
     };
 
     /* configure play button's onclick event */
     var play_button = document.getElementById('tv-play-button');
-    play_button.onclick = function() {
+    play_button.onclick = function () {
       ws_client.set_channel(channel_bar.get_curr_channel());
       play_button.style.display = 'none';
     };
