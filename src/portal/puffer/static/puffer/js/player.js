@@ -174,7 +174,7 @@ function ChannelBar() {
 
   /* find the current channel */
   var channel_list = document.querySelectorAll('#channel-list .list-group-item');
-  var active_idx = Math.floor(Math.random() * 3);  // index of the active channel
+  var active_idx = 1;  // index of the active channel
 
   /* restore the previously watched channel if there is any */
   if (window.name) {
