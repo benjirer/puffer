@@ -11,7 +11,7 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BVWDMK20ZJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     gtag('config', 'G-BVWDMK20ZJ');
@@ -25,7 +25,7 @@
 
   <!-- Reddit Conversion Pixel -->
   <script>
-  !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);rdt('init','t2_3vk4c');rdt('track', 'PageVisit');
+    !function (w, d) { if (!w.rdt) { var p = w.rdt = function () { p.sendEvent ? p.sendEvent.apply(p, arguments) : p.callQueue.push(arguments) }; p.callQueue = []; var t = d.createElement("script"); t.src = "https://www.redditstatic.com/ads/pixel.js", t.async = !0; var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(t, s) } }(window, document); rdt('init', 't2_3vk4c'); rdt('track', 'PageVisit');
   </script>
   <!-- DO NOT MODIFY -->
   <!-- End Reddit Conversion Pixel -->
@@ -40,7 +40,7 @@
     <!-- Success or error messages -->
     {% if messages %}
     <ul class="list-unstyled">
-    {% for msg in messages %}
+      {% for msg in messages %}
       <li>
         <div class="alert alert-{{msg.level_tag}}" role="alert">
           {{msg.message}}
@@ -49,7 +49,7 @@
           </button>
         </div>
       </li>
-    {% endfor %}
+      {% endfor %}
     </ul>
     {% endif %}
 
@@ -61,7 +61,9 @@
           <div id="tv-container">
             <video id="tv-video" muted></video>
             <div id="tv-spinner"></div>
-            <div id="tv-play-button"><div id="tv-play-button-inner"></div></div>
+            <div id="tv-play-button">
+              <div id="tv-play-button-inner"></div>
+            </div>
             <div id="tv-controls">
               <button type="button" id="mute-button"></button>
               <input type="range" id="volume-bar" min="0" max="1" step="0.05" value="0">
@@ -72,7 +74,7 @@
       </div>
 
       <div class="col-md-3 mt-3">
-        <div class="list-group" id="channel-list">
+        <!-- <div class="list-group" id="channel-list">
           <button type="button" name="cbs" class="list-group-item list-group-item-action">
             KPIX (CBS)
           </button>
@@ -94,7 +96,7 @@
           <button type="button" name="univision" class="list-group-item list-group-item-action">
             KDTV (Univision)
           </button>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -117,13 +119,14 @@
       </div>
       <div class="mx-1">
         <img src="{% static 'puffer/dist/images/wrench.svg' %}" class="icon">
-        <a data-toggle="collapse" href="#debug-info"
-           aria-expanded="false" aria-controls="debug-info">
+        <a data-toggle="collapse" href="#debug-info" aria-expanded="false" aria-controls="debug-info">
           Debug info
         </a>
       </div>
       <div class="mx-1">
-        <a class="github-button" href="https://github.com/stanfordsnr/puffer" aria-label="Star stanfordsnr/puffer on GitHub">Star</a><script async defer src="https://buttons.github.io/buttons.js"></script>
+        <a class="github-button" href="https://github.com/stanfordsnr/puffer"
+          aria-label="Star stanfordsnr/puffer on GitHub">Star</a>
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
       </div>
     </div>
     <div class="collapse py-2" id="debug-info">
@@ -146,7 +149,7 @@
   {% endif %}
 
   <script>
-    gtag('event', 'conversion', {'send_to': 'AW-771906819/F7YICLutpZIBEIO6ifAC'});
+    gtag('event', 'conversion', { 'send_to': 'AW-771906819/F7YICLutpZIBEIO6ifAC' });
     rdt('track', 'ViewContent');
   </script>
 </body>
