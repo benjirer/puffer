@@ -164,6 +164,34 @@ function ControlBar() {
       }
     }
   };
+
+  // Page Visibility API
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      console.log('Tab is hidden. Ensuring video continues playing.');
+      // Attempt to keep the video playing or perform some action
+      video.play();
+    } else {
+      console.log('Tab is visible.');
+      // Perform actions when the tab is active, if needed
+    }
+  });
+
+  // Audio Context Hack
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var oscillator = audioCtx.createOscillator();
+  var gainNode = audioCtx.createGain();
+
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(0, audioCtx.currentTime); // Inaudible frequency
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Inaudible gain
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+
+  console.log('Audio context started to prevent throttling.');
 }
 
 function ChannelBar() {
