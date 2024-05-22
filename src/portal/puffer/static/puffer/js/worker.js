@@ -1,13 +1,9 @@
-self.onmessage = function (e) {
-    if (e.data === 'start') {
-        self.keepAlive();
-    }
-};
-
 self.keepAlive = function () {
     function loop() {
         self.postMessage('keep-alive');
-        setTimeout(loop, 1000); // Adjust the interval as needed
+        setTimeout(loop, 100); // Frequent interval to prevent throttling
     }
     loop();
 };
+
+self.keepAlive();

@@ -9,7 +9,7 @@ let worker = new Worker('worker.js');
 worker.onmessage = function (e) {
   if (e.data === 'keep-alive') {
     // Maintain some activity to keep the page from being throttled
-    if (video.paused) {
+    if (document.hidden) {
       video.play().catch(error => console.log('Error playing video:', error));
     }
   }
