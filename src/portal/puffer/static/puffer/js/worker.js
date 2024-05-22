@@ -1,7 +1,7 @@
 function keepAlive() {
     function loop() {
         postMessage('keep-alive');
-        requestAnimationFrame(loop); // Use requestAnimationFrame for smooth and frequent updates
+        setTimeout(loop, 100); // Frequent interval to prevent throttling
     }
     loop();
 }
