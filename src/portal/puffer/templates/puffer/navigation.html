@@ -42,7 +42,6 @@
       <a role="button" class="btn btn-primary" href="{% url 'signup' %}">Sign up</a>
       <a role="button" class="btn btn-outline-primary" href="{% url 'player' %}">Log in</a>
       {% endif %}
-      </ul>
     </div>
   </div>
 </nav>
@@ -52,15 +51,35 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     var countdown = 30;
-    var interval = setInterval(function () {
+    var interval;
+    var isPaused = false;
+
+    function updateMessage() {
       if (countdown > 0) {
         document.getElementById('session-message').innerText = "Your session code will appear in " + countdown + " seconds.";
         countdown--;
       } else {
         clearInterval(interval);
         document.getElementById('session-message').innerText = "Your session code is {{ user.username }}. Please enter this code into the provided form and then close this window.";
-        // document.getElementById('user-name').style.display = 'inline';
       }
-    }, 1000);
+    }
+
+    function startTimer() {
+      interval = setInterval(updateMessage, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(interval);
+    }
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        stopTimer();
+      } else if (!isPaused) {
+        startTimer();
+      }
+    });
+
+    startTimer();
   });
 </script>
