@@ -64,11 +64,11 @@ function ControlBar() {
     }
   }
 
-  volume_bar.oninput = function () {
+  volume_bar.oninput = function() {
     set_video_volume(Number(volume_bar.value));
   };
 
-  mute_button.onclick = function () {
+  mute_button.onclick = function() {
     if (mute_button.muted) {
       set_video_volume(last_volume_before_mute);
     } else {
@@ -77,7 +77,7 @@ function ControlBar() {
     }
   };
 
-  unmute_here.onclick = function () {
+  unmute_here.onclick = function() {
     set_video_volume(1);
   };
 
@@ -99,16 +99,16 @@ function ControlBar() {
     clearTimeout(control_bar_timeout);
     show_control_bar();
 
-    control_bar_timeout = setTimeout(function () {
+    control_bar_timeout = setTimeout(function() {
       hide_control_bar();
     }, 3000);
   }
 
-  tv_container.onmousemove = function () {
+  tv_container.onmousemove = function() {
     show_control_bar_briefly();
   };
 
-  tv_container.onmouseleave = function () {
+  tv_container.onmouseleave = function() {
     tv_controls.style.opacity = '0';
   };
 
@@ -161,7 +161,7 @@ function ControlBar() {
   const LOWERCASE_F = 70;
   const UPPERCASE_F = 102;
 
-  this.onkeydown = function (e) {
+  this.onkeydown = function(e) {
     if (e.keyCode === LOWERCASE_F || e.keyCode === UPPERCASE_F) {
       toggle_full_screen();
     } else if (e.keyCode === LEFT_ARROW || e.keyCode === RIGHT_ARROW) {
@@ -174,17 +174,6 @@ function ControlBar() {
       }
     }
   };
-
-  // Page Visibility API
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-      console.log('Tab is hidden. Ensuring video continues playing.');
-      worker.postMessage('start');
-    } else {
-      console.log('Tab is visible.');
-      worker.postMessage('stop');
-    }
-  });
 
   // Audio Context Hack
   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -230,7 +219,7 @@ function ChannelBar() {
   console.log('Initial channel:', curr_channel_name);
   window.name = curr_channel_name;  // save current channel in window.name
 
-  this.get_curr_channel = function () {
+  this.get_curr_channel = function() {
     return curr_channel_name;
   };
 
@@ -265,14 +254,14 @@ function ChannelBar() {
 
   /* set up onclick callbacks for channels */
   for (var i = 0; i < channel_list.length; i++) {
-    channel_list[i].onclick = (function (i) {
-      return function () {
+    channel_list[i].onclick = (function(i) {
+      return function() {
         change_channel(i);
       };
     })(i);
   }
 
-  this.onkeydown = function (e) {
+  this.onkeydown = function(e) {
     if (e.keyCode === DOWN_ARROW) {
       change_channel(active_idx + 1);
     } else if (e.keyCode === UP_ARROW) {
@@ -471,7 +460,7 @@ function init_player(params_json, csrf_token) {
   var control_bar = new ControlBar();
   var channel_bar = new ChannelBar();
 
-  document.onkeydown = function (e) {
+  document.onkeydown = function(e) {
     e = e || window.event;
 
     /* prevent the default behaviors of arrow keys */
@@ -483,17 +472,17 @@ function init_player(params_json, csrf_token) {
     channel_bar.onkeydown(e);
   };
 
-  load_script('/static/puffer/js/puffer.js').onload = function () {
+  load_script('/static/puffer/js/puffer.js').onload = function() {
     var ws_client = new WebSocketClient(
       session_key, username, settings_debug, port, csrf_token, sysinfo);
 
-    channel_bar.on_channel_change = function (new_channel) {
+    channel_bar.on_channel_change = function(new_channel) {
       ws_client.set_channel(new_channel);
     };
 
     /* configure play button's onclick event */
     var play_button = document.getElementById('tv-play-button');
-    play_button.onclick = function () {
+    play_button.onclick = function() {
       ws_client.set_channel(channel_bar.get_curr_channel());
       play_button.style.display = 'none';
     };
