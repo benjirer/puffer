@@ -27,7 +27,7 @@ function ControlBar() {
 
   /* video is muted by default */
   video.volume = 0;
-  mute_button.muted = true;
+  mute_button.muted = false;
   mute_button.style.backgroundImage = volume_off_img;
   var last_volume_before_mute = 1;
 
@@ -174,7 +174,9 @@ function ChannelBar() {
 
   /* find the current channel */
   var channel_list = document.querySelectorAll('#channel-list .list-group-item');
-  var active_idx = 0;  // index of the active channel
+  // var active_idx = 0;  // index of the active channel
+  // set random channel (either 0, )
+  var active_idx = Math.floor(Math.random() * channel_list.length);
 
   /* restore the previously watched channel if there is any */
   if (window.name) {
