@@ -6,10 +6,10 @@ const RIGHT_ARROW = 39;
 const DOWN_ARROW = 40;
 
 let worker = new Worker('worker.js');
-worker.onmessage = function (e) {
+worker.onmessage = function(e) {
   if (e.data === 'keep-alive') {
     // Maintain some activity to keep the page from being throttled
-    if (document.hidden) {
+    if (document.hidden && video.paused) {
       video.play().catch(error => console.log('Error playing video:', error));
     }
   }

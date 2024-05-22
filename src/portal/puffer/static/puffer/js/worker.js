@@ -1,9 +1,9 @@
-self.keepAlive = function () {
+function keepAlive() {
     function loop() {
-        self.postMessage('keep-alive');
-        setTimeout(loop, 100); // Frequent interval to prevent throttling
+        postMessage('keep-alive');
+        requestAnimationFrame(loop); // Use requestAnimationFrame for smooth and frequent updates
     }
     loop();
-};
+}
 
-self.keepAlive();
+keepAlive();
