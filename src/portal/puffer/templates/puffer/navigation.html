@@ -47,10 +47,20 @@
   </div>
 </nav>
 
+<div id="session-message">Your session code will appear in 30 seconds.</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(function () {
-      document.getElementById('user-name').style.display = 'inline';
-    }, 30000);  // 30000 milliseconds = 30 seconds
+    var countdown = 30;
+    var interval = setInterval(function () {
+      if (countdown > 0) {
+        document.getElementById('session-message').innerText = "Your session code will appear in " + countdown + " seconds.";
+        countdown--;
+      } else {
+        clearInterval(interval);
+        document.getElementById('session-message').innerText = "Your session code is {{ user.username }}. Please enter this code into the provided form and then close this window.";
+        document.getElementById('user-name').style.display = 'inline';
+      }
+    }, 1000);
   });
 </script>
