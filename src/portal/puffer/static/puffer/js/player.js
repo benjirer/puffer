@@ -5,6 +5,16 @@ const UP_ARROW = 38;
 const RIGHT_ARROW = 39;
 const DOWN_ARROW = 40;
 
+let worker = new Worker('worker.js');
+worker.onmessage = function (e) {
+  if (e.data === 'keep-alive') {
+    // Maintain some activity to keep the page from being throttled
+    if (video.paused) {
+      video.play().catch(error => console.log('Error playing video:', error));
+    }
+  }
+};
+
 function load_script(script_path) {
   /* Create and append a new script */
   var new_script = document.createElement('script');
@@ -169,11 +179,10 @@ function ControlBar() {
   document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
       console.log('Tab is hidden. Ensuring video continues playing.');
-      // Attempt to keep the video playing or perform some action
-      video.play();
+      worker.postMessage('start');
     } else {
       console.log('Tab is visible.');
-      // Perform actions when the tab is active, if needed
+      worker.postMessage('stop');
     }
   });
 
@@ -271,7 +280,6 @@ function ChannelBar() {
     }
   };
 }
-
 
 function get_client_system_info() {
   /* Below code adapted from https://stackoverflow.com/a/18706818 */
