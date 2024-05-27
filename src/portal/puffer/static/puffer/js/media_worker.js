@@ -1,43 +1,39 @@
-self.onmessage = function (e) {
-  const { type, data } = e.data;
+// media_worker.js
+let mediaSource = new MediaSource();
+let videoSourceBuffer, audioSourceBuffer;
+let handle = mediaSource.handle;
 
-  if (type === 'init') {
-    // Initialize MediaSource and create handles
-    self.mediaSource = new MediaSource();
-    const handle = self.mediaSource.handle;
+// Transfer the handle to the main thread
+self.postMessage({ handle }, [handle]);
 
-    // Send handle back to main thread
-    postMessage({ type: 'init', handle });
+mediaSource.addEventListener("sourceopen", () => {
+  console.log("MediaSource opened");
+});
 
-    self.mediaSource.addEventListener('sourceopen', () => {
-      console.log('MediaSource opened');
-      postMessage({ type: 'sourceopen' });
-    });
+self.onmessage = (event) => {
+  const { action, data } = event.data;
 
-    self.mediaSource.addEventListener('sourceended', () => {
-      console.log('MediaSource ended');
-    });
+  switch (action) {
+    case 'initSourceBuffers':
+      const { videoCodec, audioCodec } = data;
+      videoSourceBuffer = mediaSource.addSourceBuffer(videoCodec);
+      audioSourceBuffer = mediaSource.addSourceBuffer(audioCodec);
 
-    self.mediaSource.addEventListener('sourceclose', () => {
-      console.log('MediaSource closed');
-    });
-  } else if (type === 'addSourceBuffer') {
-    if (data.mediaType === 'video') {
-      self.videoSourceBuffer = self.mediaSource.addSourceBuffer(data.mimeType);
-      self.videoSourceBuffer.addEventListener('updateend', () => {
-        postMessage({ type: 'updateend', mediaType: 'video' });
+      videoSourceBuffer.addEventListener("updateend", () => {
+        self.postMessage({ action: 'videoUpdateEnd' });
       });
-    } else if (data.mediaType === 'audio') {
-      self.audioSourceBuffer = self.mediaSource.addSourceBuffer(data.mimeType);
-      self.audioSourceBuffer.addEventListener('updateend', () => {
-        postMessage({ type: 'updateend', mediaType: 'audio' });
+
+      audioSourceBuffer.addEventListener("updateend", () => {
+        self.postMessage({ action: 'audioUpdateEnd' });
       });
-    }
-  } else if (type === 'appendBuffer') {
-    if (data.mediaType === 'video') {
-      self.videoSourceBuffer.appendBuffer(data.buffer);
-    } else if (data.mediaType === 'audio') {
-      self.audioSourceBuffer.appendBuffer(data.buffer);
-    }
+      break;
+
+    case 'appendVideoBuffer':
+      videoSourceBuffer.appendBuffer(data.buffer);
+      break;
+
+    case 'appendAudioBuffer':
+      audioSourceBuffer.appendBuffer(data.buffer);
+      break;
   }
 };
