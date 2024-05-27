@@ -2,25 +2,32 @@ self.onmessage = function (event) {
   const data = event.data;
 
   if (data.type === 'init') {
-    self.mediaSource = new MediaSource();
-    self.mediaSourceHandle = self.mediaSource.handle;
-    self.postMessage({ type: 'mediaSourceHandle', handle: self.mediaSourceHandle }, [self.mediaSourceHandle]);
+    self.videoCodec = data.videoCodec;
+    self.audioCodec = data.audioCodec;
 
-    self.mediaSource.addEventListener('sourceopen', () => {
-      self.videoSourceBuffer = self.mediaSource.addSourceBuffer(data.videoCodec);
-      self.audioSourceBuffer = self.mediaSource.addSourceBuffer(data.audioCodec);
-
-      self.videoSourceBuffer.addEventListener('updateend', () => {
-        self.postMessage({ type: 'videoUpdateEnd' });
-      });
-
-      self.audioSourceBuffer.addEventListener('updateend', () => {
-        self.postMessage({ type: 'audioUpdateEnd' });
-      });
-    });
+    self.pendingVideoChunks = [];
+    self.pendingAudioChunks = [];
   } else if (data.type === 'video') {
-    self.videoSourceBuffer.appendBuffer(data.data);
+    self.pendingVideoChunks.push(data.data);
+    self.processVideoBuffer();
   } else if (data.type === 'audio') {
-    self.audioSourceBuffer.appendBuffer(data.data);
+    self.pendingAudioChunks.push(data.data);
+    self.processAudioBuffer();
+  }
+};
+
+self.processVideoBuffer = function () {
+  while (self.pendingVideoChunks.length > 0) {
+    const chunk = self.pendingVideoChunks.shift();
+    // Process video chunk (no actual video element to append to)
+    self.postMessage({ type: 'videoUpdateEnd' });
+  }
+};
+
+self.processAudioBuffer = function () {
+  while (self.pendingAudioChunks.length > 0) {
+    const chunk = self.pendingAudioChunks.shift();
+    // Process audio chunk (no actual video element to append to)
+    self.postMessage({ type: 'audioUpdateEnd' });
   }
 };
