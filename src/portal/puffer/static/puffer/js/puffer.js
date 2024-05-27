@@ -98,54 +98,7 @@ function AVSource(ws_client, server_init) {
   var pending_audio_chunks = [];
 
   /* MediaSource and SourceBuffers */
-  var vbuf = null;
-  var abuf = null;
-
-  var vbuf_couple = [];
-  var abuf_couple = [];
-
-  /* used by handleVideo */
-  var curr_video_format = null;
-  var curr_ssim = null;
-  var curr_video_bitrate = null;  // kbps
-  var partial_video_chunks = null;
-
-  /* used by handleAudio */
-  var curr_audio_format = null;
-  var partial_audio_chunks = null;
-
-  // Initialize Media Worker
-  this.mediaWorker = new Worker('/static/puffer/js/media_worker.js');
-
-  this.mediaWorker.postMessage({
-    videoCodec: video_codec,
-    audioCodec: audio_codec,
-    initSeekTs: init_seek_ts,
-    timescale: timescale
-  });
-
-  this.mediaWorker.onmessage = function (event) {
-    if (event.data.error) {
-      console.log('Media Worker Error: ', event.data.error);
-      set_fatal_error('Media Worker Error: ' + event.data.error);
-      return;
-    }
-
-    if (event.data.mediaSourceHandle) {
-      video.srcObject = event.data.mediaSourceHandle;
-      video.load();
-      video.play();
-    }
-
-    if (event.data.mediaSourceOpen) {
-      console.log('MediaSource is open');
-    }
-  };
-
-  this.mediaWorker.onerror = function (error) {
-    console.log('Media Worker Error: ', error);
-    set_fatal_error('Media Worker Error: ' + error.message);
-  };
+  var mediaWorker = new Worker('media_worker.js');
 
   /* Initialize video and audio source buffers, and set the initial offset */
   function init_source_buffers() {
@@ -153,12 +106,52 @@ function AVSource(ws_client, server_init) {
 
     video.currentTime = init_seek_ts / timescale;
 
-    that.mediaWorker.postMessage({
-      action: 'addSourceBuffer',
+    mediaWorker.postMessage({
+      action: 'initSourceBuffers',
       videoCodec: video_codec,
       audioCodec: audio_codec
     });
+
+    mediaWorker.onmessage = function (e) {
+      const { action, buffer } = e.data;
+
+      if (action === 'sourceBufferAdded') {
+        if (buffer === 'video') {
+          vbuf = true;
+        } else if (buffer === 'audio') {
+          abuf = true;
+        }
+
+        if (vbuf && abuf) {
+          that.vbuf_update();
+          that.abuf_update();
+        }
+      }
+
+      if (action === 'updateend') {
+        if (buffer === 'video') {
+          if (vbuf_couple.length > 0) {
+            var data_to_ack = vbuf_couple.shift();
+            ws_client.send_client_ack('client-vidack', data_to_ack);
+          }
+          that.vbuf_update();
+        } else if (buffer === 'audio') {
+          if (abuf_couple.length > 0) {
+            var data_to_ack = abuf_couple.shift();
+            ws_client.send_client_ack('client-audack', data_to_ack);
+          }
+          that.abuf_update();
+        }
+      }
+
+      if (action === 'error') {
+        console.log(`${buffer} source buffer error:`, e.data.error);
+        that.close();
+      }
+    };
   }
+
+  mediaWorker.postMessage({ action: 'initialize' });
 
   this.isOpen = function () {
     return vbuf !== null && abuf !== null;
@@ -166,12 +159,7 @@ function AVSource(ws_client, server_init) {
 
   /* call "close" to garbage collect MediaSource and SourceBuffers sooner */
   this.close = function () {
-    if (that.mediaWorker) {
-      console.log('Closing media source buffer');
-      that.mediaWorker.terminate();
-      that.mediaWorker = null;
-    }
-
+    console.log('Closing media source buffer');
     vbuf = null;
     abuf = null;
 
@@ -320,17 +308,27 @@ function AVSource(ws_client, server_init) {
 
   /* Push data onto the SourceBuffers if they are ready */
   this.vbuf_update = function () {
-    if (vbuf && !vbuf.updating && pending_video_chunks.length > 0) {
+    if (!vbuf) return;
+    if (!vbuf.updating && pending_video_chunks.length > 0) {
       var next_video = pending_video_chunks.shift();
-      this.mediaWorker.postMessage({ action: 'appendBuffer', buffer: 'video', data: next_video.data });
+      mediaWorker.postMessage({
+        action: 'appendBuffer',
+        buffer: 'video',
+        data: next_video.data
+      });
       vbuf_couple.push(next_video.metadata);
     }
   };
 
   this.abuf_update = function () {
-    if (abuf && !abuf.updating && pending_audio_chunks.length > 0) {
+    if (!abuf) return;
+    if (!abuf.updating && pending_audio_chunks.length > 0) {
       var next_audio = pending_audio_chunks.shift();
-      this.mediaWorker.postMessage({ action: 'appendBuffer', buffer: 'audio', data: next_audio.data });
+      mediaWorker.postMessage({
+        action: 'appendBuffer',
+        buffer: 'audio',
+        data: next_audio.data
+      });
       abuf_couple.push(next_audio.metadata);
     }
   };

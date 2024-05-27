@@ -1,27 +1,52 @@
-self.onmessage = function (event) {
-  const { videoCodec, audioCodec, initSeekTs, timescale } = event.data;
+self.onmessage = function (e) {
+  const { action, videoCodec, audioCodec, data, buffer } = e.data;
 
-  if (!self.mediaSource) {
+  if (action === 'initialize') {
     self.mediaSource = new MediaSource();
+    self.mediaSourceHandle = self.mediaSource.handle;
+
+    self.mediaSource.addEventListener('sourceopen', () => {
+      self.postMessage({ action: 'sourceopen' });
+    });
+
+    self.mediaSource.addEventListener('sourceclose', () => {
+      self.postMessage({ action: 'sourceclose' });
+    });
+
+    self.mediaSource.addEventListener('error', (e) => {
+      self.postMessage({ action: 'error', error: e });
+    });
+
+    self.mediaSource.addEventListener('sourceended', () => {
+      self.postMessage({ action: 'sourceended' });
+    });
   }
 
-  self.mediaSource.addEventListener('sourceopen', () => {
-    self.videoSourceBuffer = self.mediaSource.addSourceBuffer(videoCodec);
-    self.audioSourceBuffer = self.mediaSource.addSourceBuffer(audioCodec);
+  if (action === 'initSourceBuffers') {
+    try {
+      self.videoSourceBuffer = self.mediaSource.addSourceBuffer(videoCodec);
+      self.audioSourceBuffer = self.mediaSource.addSourceBuffer(audioCodec);
 
-    self.postMessage({ mediaSourceHandle: self.mediaSource.handle });
-  });
+      self.videoSourceBuffer.addEventListener('updateend', () => {
+        self.postMessage({ action: 'updateend', buffer: 'video' });
+      });
 
-  self.appendBuffer = function (sourceBuffer, data) {
-    sourceBuffer.appendBuffer(data);
-  };
+      self.audioSourceBuffer.addEventListener('updateend', () => {
+        self.postMessage({ action: 'updateend', buffer: 'audio' });
+      });
 
-  self.mediaSource.addEventListener('sourceopen', () => {
-    self.mediaSource.duration = Infinity;
-    self.mediaSource.readyState === 'open' && self.postMessage({ mediaSourceOpen: true });
-  });
-};
+      self.postMessage({ action: 'sourceBufferAdded', buffer: 'video' });
+      self.postMessage({ action: 'sourceBufferAdded', buffer: 'audio' });
+    } catch (e) {
+      self.postMessage({ action: 'error', error: e.message });
+    }
+  }
 
-self.onerror = function (error) {
-  self.postMessage({ error: error.message });
+  if (action === 'appendBuffer') {
+    if (buffer === 'video' && self.videoSourceBuffer) {
+      self.videoSourceBuffer.appendBuffer(data);
+    } else if (buffer === 'audio' && self.audioSourceBuffer) {
+      self.audioSourceBuffer.appendBuffer(data);
+    }
+  }
 };
