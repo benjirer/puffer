@@ -1,39 +1,27 @@
-// media_worker.js
-let mediaSource = new MediaSource();
-let videoSourceBuffer, audioSourceBuffer;
-let handle = mediaSource.handle;
+self.onmessage = function (event) {
+  const { videoCodec, audioCodec, initSeekTs, timescale } = event.data;
 
-// Transfer the handle to the main thread
-self.postMessage({ handle }, [handle]);
-
-mediaSource.addEventListener("sourceopen", () => {
-  console.log("MediaSource opened");
-});
-
-self.onmessage = (event) => {
-  const { action, data } = event.data;
-
-  switch (action) {
-    case 'initSourceBuffers':
-      const { videoCodec, audioCodec } = data;
-      videoSourceBuffer = mediaSource.addSourceBuffer(videoCodec);
-      audioSourceBuffer = mediaSource.addSourceBuffer(audioCodec);
-
-      videoSourceBuffer.addEventListener("updateend", () => {
-        self.postMessage({ action: 'videoUpdateEnd' });
-      });
-
-      audioSourceBuffer.addEventListener("updateend", () => {
-        self.postMessage({ action: 'audioUpdateEnd' });
-      });
-      break;
-
-    case 'appendVideoBuffer':
-      videoSourceBuffer.appendBuffer(data.buffer);
-      break;
-
-    case 'appendAudioBuffer':
-      audioSourceBuffer.appendBuffer(data.buffer);
-      break;
+  if (!self.mediaSource) {
+    self.mediaSource = new MediaSource();
   }
+
+  self.mediaSource.addEventListener('sourceopen', () => {
+    self.videoSourceBuffer = self.mediaSource.addSourceBuffer(videoCodec);
+    self.audioSourceBuffer = self.mediaSource.addSourceBuffer(audioCodec);
+
+    self.postMessage({ mediaSourceHandle: self.mediaSource.handle });
+  });
+
+  self.appendBuffer = function (sourceBuffer, data) {
+    sourceBuffer.appendBuffer(data);
+  };
+
+  self.mediaSource.addEventListener('sourceopen', () => {
+    self.mediaSource.duration = Infinity;
+    self.mediaSource.readyState === 'open' && self.postMessage({ mediaSourceOpen: true });
+  });
+};
+
+self.onerror = function (error) {
+  self.postMessage({ error: error.message });
 };

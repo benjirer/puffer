@@ -1,4 +1,3 @@
-// puffer.js
 'use strict';
 
 const WS_OPEN = 1;
@@ -86,7 +85,8 @@ function AVSource(ws_client, server_init) {
   const timescale = server_init.timescale;
   const video_duration = server_init.videoDuration;
   const audio_duration = server_init.audioDuration;
-  const init_seek_ts = Math.max(server_init.initAudioTimestamp, server_init.initVideoTimestamp);
+  const init_seek_ts = Math.max(server_init.initAudioTimestamp,
+    server_init.initVideoTimestamp);
 
   /* Timestamps for the next chunks that the player is expecting */
   var next_video_timestamp = server_init.initVideoTimestamp;
@@ -97,46 +97,53 @@ function AVSource(ws_client, server_init) {
   var pending_video_chunks = [];
   var pending_audio_chunks = [];
 
+  /* MediaSource and SourceBuffers */
+  var vbuf = null;
+  var abuf = null;
+
   var vbuf_couple = [];
   var abuf_couple = [];
 
-  let mediaWorker = new Worker('/static/puffer/js/media_worker.js');
+  /* used by handleVideo */
+  var curr_video_format = null;
+  var curr_ssim = null;
+  var curr_video_bitrate = null;  // kbps
+  var partial_video_chunks = null;
 
-  let mediaSourceHandle;
+  /* used by handleAudio */
+  var curr_audio_format = null;
+  var partial_audio_chunks = null;
 
-  mediaWorker.onmessage = (event) => {
-    const { action } = event.data;
+  // Initialize Media Worker
+  this.mediaWorker = new Worker('/static/puffer/js/media_worker.js');
 
-    switch (action) {
-      case 'handle':
-        mediaSourceHandle = event.data.handle;
-        video.srcObject = mediaSourceHandle;
-        break;
+  this.mediaWorker.postMessage({
+    videoCodec: video_codec,
+    audioCodec: audio_codec,
+    initSeekTs: init_seek_ts,
+    timescale: timescale
+  });
 
-      case 'videoUpdateEnd':
-        if (vbuf_couple.length > 0) {
-          var data_to_ack = vbuf_couple.shift();
-          /* send the last ack here after buffer length is updated */
-          ws_client.send_client_ack('client-vidack', data_to_ack);
-        }
+  this.mediaWorker.onmessage = function (event) {
+    if (event.data.error) {
+      console.log('Media Worker Error: ', event.data.error);
+      set_fatal_error('Media Worker Error: ' + event.data.error);
+      return;
+    }
 
-        that.vbuf_update();
-        break;
+    if (event.data.mediaSourceHandle) {
+      video.srcObject = event.data.mediaSourceHandle;
+      video.load();
+      video.play();
+    }
 
-      case 'audioUpdateEnd':
-        if (abuf_couple.length > 0) {
-          var data_to_ack = abuf_couple.shift();
-          /* send the last ack here after buffer length is updated */
-          ws_client.send_client_ack('client-audack', data_to_ack);
-        }
-
-        that.abuf_update();
-        break;
+    if (event.data.mediaSourceOpen) {
+      console.log('MediaSource is open');
     }
   };
 
-  mediaWorker.onerror = function (error) {
-    console.error("Media Worker Error: ", error);
+  this.mediaWorker.onerror = function (error) {
+    console.log('Media Worker Error: ', error);
     set_fatal_error('Media Worker Error: ' + error.message);
   };
 
@@ -146,42 +153,27 @@ function AVSource(ws_client, server_init) {
 
     video.currentTime = init_seek_ts / timescale;
 
-    mediaWorker.postMessage({ action: 'initSourceBuffers', data: { videoCodec: video_codec, audioCodec: audio_codec } });
+    that.mediaWorker.postMessage({
+      action: 'addSourceBuffer',
+      videoCodec: video_codec,
+      audioCodec: audio_codec
+    });
   }
 
-  video.oncanplay = function () {
-    var play_promise = video.play();
-
-    if (play_promise !== undefined) {
-      play_promise.then(function () {
-        // playback started; only render UI here
-        stop_spinner();
-        hide_play_button();
-      }).catch(function (error) {
-        // playback failed
-        show_play_button();
-        add_player_error(
-          'Error: your browser prevented muted autoplay. Please click ' +
-          'the play button to start playback.', 'channel');
-        channel_error = true;
-        report_error(init_id, error);
-      });
-    }
-  };
-
-  video.onwaiting = function () {
-    // playback stalled; only render UI here
-    start_spinner();
-  };
-
   this.isOpen = function () {
-    return mediaSourceHandle !== null;
+    return vbuf !== null && abuf !== null;
   };
 
   /* call "close" to garbage collect MediaSource and SourceBuffers sooner */
   this.close = function () {
-    mediaWorker.terminate();
-    mediaSourceHandle = null;
+    if (that.mediaWorker) {
+      console.log('Closing media source buffer');
+      that.mediaWorker.terminate();
+      that.mediaWorker = null;
+    }
+
+    vbuf = null;
+    abuf = null;
 
     vbuf_couple = [];
     abuf_couple = [];
@@ -210,12 +202,14 @@ function AVSource(ws_client, server_init) {
       /* assemble partial chunks into a complete chunk */
       pending_video_chunks.push({
         metadata: metadata,
-        data: concat_arraybuffers(partial_video_chunks, metadata.totalByteLength)
+        data: concat_arraybuffers(partial_video_chunks,
+          metadata.totalByteLength)
       });
       partial_video_chunks = [];
 
       next_video_timestamp = metadata.timestamp + video_duration;
-      curr_video_bitrate = 0.001 * 8 * metadata.totalByteLength / (video_duration / timescale);
+      curr_video_bitrate = 0.001 * 8 * metadata.totalByteLength /
+        (video_duration / timescale);
 
       /* try updating vbuf */
       that.vbuf_update();
@@ -243,7 +237,8 @@ function AVSource(ws_client, server_init) {
       /* assemble partial chunks into a complete chunk */
       pending_audio_chunks.push({
         metadata: metadata,
-        data: concat_arraybuffers(partial_audio_chunks, metadata.totalByteLength)
+        data: concat_arraybuffers(partial_audio_chunks,
+          metadata.totalByteLength)
       });
       partial_audio_chunks = [];
 
@@ -327,7 +322,7 @@ function AVSource(ws_client, server_init) {
   this.vbuf_update = function () {
     if (vbuf && !vbuf.updating && pending_video_chunks.length > 0) {
       var next_video = pending_video_chunks.shift();
-      mediaWorker.postMessage({ action: 'appendVideoBuffer', data: { buffer: next_video.data } });
+      this.mediaWorker.postMessage({ action: 'appendBuffer', buffer: 'video', data: next_video.data });
       vbuf_couple.push(next_video.metadata);
     }
   };
@@ -335,12 +330,10 @@ function AVSource(ws_client, server_init) {
   this.abuf_update = function () {
     if (abuf && !abuf.updating && pending_audio_chunks.length > 0) {
       var next_audio = pending_audio_chunks.shift();
-      mediaWorker.postMessage({ action: 'appendAudioBuffer', data: { buffer: next_audio.data } });
+      this.mediaWorker.postMessage({ action: 'appendBuffer', buffer: 'audio', data: next_audio.data });
       abuf_couple.push(next_audio.metadata);
     }
   };
-
-  init_source_buffers();
 }
 
 function WebSocketClient(session_key, username_in, settings_debug, port_in,
@@ -699,6 +692,31 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     }
 
     soft_set_channel(channel);
+  };
+
+  video.oncanplay = function () {
+    var play_promise = video.play();
+
+    if (play_promise !== undefined) {
+      play_promise.then(function () {
+        // playback started; only render UI here
+        stop_spinner();
+        hide_play_button();
+      }).catch(function (error) {
+        // playback failed
+        show_play_button();
+        add_player_error(
+          'Error: your browser prevented muted autoplay. Please click ' +
+          'the play button to start playback.', 'channel');
+        channel_error = true;
+        report_error(init_id, error);
+      });
+    }
+  };
+
+  video.onwaiting = function () {
+    // playback stalled; only render UI here
+    start_spinner();
   };
 
   /* check if *video or audio* is rebuffering every 50 ms */
