@@ -1,52 +1,26 @@
-self.onmessage = function (e) {
-  const { action, videoCodec, audioCodec, data, buffer } = e.data;
+self.onmessage = function (event) {
+  const data = event.data;
 
-  if (action === 'initialize') {
+  if (data.type === 'init') {
     self.mediaSource = new MediaSource();
     self.mediaSourceHandle = self.mediaSource.handle;
+    self.postMessage({ type: 'mediaSourceHandle', handle: self.mediaSourceHandle }, [self.mediaSourceHandle]);
 
     self.mediaSource.addEventListener('sourceopen', () => {
-      self.postMessage({ action: 'sourceopen' });
-    });
-
-    self.mediaSource.addEventListener('sourceclose', () => {
-      self.postMessage({ action: 'sourceclose' });
-    });
-
-    self.mediaSource.addEventListener('error', (e) => {
-      self.postMessage({ action: 'error', error: e });
-    });
-
-    self.mediaSource.addEventListener('sourceended', () => {
-      self.postMessage({ action: 'sourceended' });
-    });
-  }
-
-  if (action === 'initSourceBuffers') {
-    try {
-      self.videoSourceBuffer = self.mediaSource.addSourceBuffer(videoCodec);
-      self.audioSourceBuffer = self.mediaSource.addSourceBuffer(audioCodec);
+      self.videoSourceBuffer = self.mediaSource.addSourceBuffer(data.videoCodec);
+      self.audioSourceBuffer = self.mediaSource.addSourceBuffer(data.audioCodec);
 
       self.videoSourceBuffer.addEventListener('updateend', () => {
-        self.postMessage({ action: 'updateend', buffer: 'video' });
+        self.postMessage({ type: 'videoUpdateEnd' });
       });
 
       self.audioSourceBuffer.addEventListener('updateend', () => {
-        self.postMessage({ action: 'updateend', buffer: 'audio' });
+        self.postMessage({ type: 'audioUpdateEnd' });
       });
-
-      self.postMessage({ action: 'sourceBufferAdded', buffer: 'video' });
-      self.postMessage({ action: 'sourceBufferAdded', buffer: 'audio' });
-    } catch (e) {
-      self.postMessage({ action: 'error', error: e.message });
-    }
-  }
-
-  if (action === 'appendBuffer') {
-    if (buffer === 'video' && self.videoSourceBuffer) {
-      self.videoSourceBuffer.appendBuffer(data);
-    } else if (buffer === 'audio' && self.audioSourceBuffer) {
-      self.audioSourceBuffer.appendBuffer(data);
-    }
+    });
+  } else if (data.type === 'video') {
+    self.videoSourceBuffer.appendBuffer(data.data);
+  } else if (data.type === 'audio') {
+    self.audioSourceBuffer.appendBuffer(data.data);
   }
 };
