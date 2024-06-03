@@ -53,6 +53,7 @@
     var countdown = 30;
     var interval;
     var isPaused = false;
+    var awayTime = 0; // Track time away from the page
 
     function updateMessage() {
       if (countdown > 0) {
@@ -72,11 +73,19 @@
       clearInterval(interval);
     }
 
+    // Update awayTime when the page is hidden
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) {
         stopTimer();
+        awayTime = Date.now(); // Record the time when the page becomes hidden
       } else if (!isPaused) {
-        startTimer();
+        var awayDuration = (Date.now() - awayTime) / 1000; // Calculate duration away from page in seconds
+        if (awayDuration > 10) {
+          document.getElementById('session-message').innerText = "Unfortunately, we require that you have this tab open during the experiment. As you have been away from this page for over 10 seconds, this attempt cannot be counted. Please try again.";
+        } else {
+          countdown -= awayDuration; // Adjust countdown by the time spent away
+          startTimer();
+        }
       }
     });
 
