@@ -71,7 +71,7 @@ MIDDLEWARE = [
     "accounts.auto_login_middleware.AutoCreateUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "puffer.middleware.CheckMultipleSessionsMiddleware",
+    "puffer.multiple_sessions_middleware.CheckMultipleSessionsMiddleware",
 ]
 
 ROOT_URLCONF = "portal.urls"
