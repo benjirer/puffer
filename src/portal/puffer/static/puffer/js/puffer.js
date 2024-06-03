@@ -118,6 +118,15 @@ function AVSource(ws_client, server_init) {
       case 'getAudioBuffer':
         that.audioBuffer = data.buffer;
         break;
+      case 'getVideoBitrate':
+        that.videoBitrate = data.bitrate;
+        break;
+      case 'getSSIMdB':
+        that.ssim = data.ssim;
+        break;
+      case 'getVideoFormat':
+        that.videoFormat = data.format;
+        break;
     }
   };
 
@@ -157,6 +166,21 @@ function AVSource(ws_client, server_init) {
   this.getAudioBuffer = function () {
     worker.postMessage({ type: 'getAudioBuffer' });
     return that.audioBuffer;
+  };
+
+  this.getVideoBitrate = function () {
+    worker.postMessage({ type: 'getVideoBitrate' });
+    return that.videoBitrate;
+  };
+
+  this.getSSIMdB = function () {
+    worker.postMessage({ type: 'getSSIMdB' });
+    return that.ssim;
+  };
+
+  this.getVideoFormat = function () {
+    worker.postMessage({ type: 'getVideoFormat' });
+    return that.videoFormat;
   };
 
   this.vbuf_update = function () {

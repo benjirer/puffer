@@ -23,6 +23,15 @@ self.onmessage = function (e) {
         case 'getAudioBuffer':
             self.postMessage({ type: 'getAudioBuffer', buffer: self.getAudioBuffer() });
             break;
+        case 'getVideoBitrate':
+            self.postMessage({ type: 'getVideoBitrate', bitrate: self.getVideoBitrate() });
+            break;
+        case 'getSSIMdB':
+            self.postMessage({ type: 'getSSIMdB', ssim: self.getSSIMdB() });
+            break;
+        case 'getVideoFormat':
+            self.postMessage({ type: 'getVideoFormat', format: self.getVideoFormat() });
+            break;
     }
 };
 
@@ -194,6 +203,18 @@ self.getAudioBuffer = function () {
     }
 
     return 0;
+};
+
+self.getVideoBitrate = function () {
+    return self.curr_video_bitrate || 0;
+};
+
+self.getSSIMdB = function () {
+    return -10 * Math.log10(1 - self.curr_ssim);
+};
+
+self.getVideoFormat = function () {
+    return self.curr_video_format;
 };
 
 self.closeWorker = function () {
