@@ -145,7 +145,7 @@
     window.addEventListener('storage', function (event) {
       if (event.key === 'streaming_status' && event.newValue === 'active') {
         alert('Streaming is already active in another tab!');
-        window.location.href = '/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
+        window.location.href = 'puffer/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
       }
     });
 
@@ -154,7 +154,7 @@
         localStorage.setItem('streaming_status', 'active');
       } else {
         alert('Streaming is already active in another tab!');
-        window.location.href = '/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
+        window.location.href = 'puffer/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
       }
     });
 
