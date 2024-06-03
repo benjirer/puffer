@@ -140,6 +140,29 @@
     gtag('event', 'conversion', { 'send_to': 'AW-771906819/F7YICLutpZIBEIO6ifAC' });
     rdt('track', 'ViewContent');
   </script>
+
+  <script>
+    window.addEventListener('storage', function (event) {
+      if (event.key === 'streaming_status' && event.newValue === 'active') {
+        alert('Streaming is already active in another tab!');
+        window.location.href = '/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!localStorage.getItem('streaming_status')) {
+        localStorage.setItem('streaming_status', 'active');
+      } else {
+        alert('Streaming is already active in another tab!');
+        window.location.href = '/multiple_sessions_not_allowed.html'; // Redirect to home or another appropriate page
+      }
+    });
+
+    window.onbeforeunload = function () {
+      localStorage.removeItem('streaming_status');
+    };
+  </script>
+
 </body>
 
 </html>
