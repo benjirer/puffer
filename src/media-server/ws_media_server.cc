@@ -499,7 +499,7 @@ void handle_client_init(WebSocketServer &server, WebSocketClient &client,
     append_to_log("client_buffer", log_line);
 
     /* record system information */
-    log_line = to_string(timestamp_ms()) + "," + server_id + ":" + to_string(config["ws_base_port"].as<uint16_t>() + server_id_int) + "," + expt_id + "," + client.username() + "," + to_string(client.first_init_id().value()) + "," + to_string(msg.init_id) + "," + client_address_with_port(client) + "," + client.os() + "," + client.browser() + "," + to_string(client.screen_width()) + "," + to_string(client.screen_height());
+    log_line = to_string(timestamp_ms()) + "," + server_id + ":" + to_string(config["ws_base_port"].as<uint16_t>() + stoi(server_id)) + "," + expt_id + "," + client.username() + "," + to_string(client.first_init_id().value()) + "," + to_string(msg.init_id) + "," + client_address_with_port(client) + "," + client.os() + "," + client.browser() + "," + to_string(client.screen_width()) + "," + to_string(client.screen_height());
     append_to_log("client_sysinfo", log_line);
   }
 
