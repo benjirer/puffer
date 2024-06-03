@@ -61,15 +61,15 @@ def user_logged_in_handler(sender, request, user, **kwargs):
     if curr_session_key == last_session_key:
         return
 
-    # user has another session, set a flag and delete the previous session
-    request.session["multiple_sessions"] = True
-
     try:
         user_session = Session.objects.get(session_key=last_session_key)
     except Session.DoesNotExist:
         user_session = None
 
+    # user has another session, set a flag and delete the previous session
+
     if user_session:
+        request.session["multiple_sessions"] = True
         user_session.delete()
 
     user_profile.last_session_key = curr_session_key
