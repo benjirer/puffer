@@ -109,6 +109,15 @@ function AVSource(ws_client, server_init) {
         video.src = data.url;
         video.load();
         break;
+      case 'isRebuffering':
+        that.rebuffering = data.rebuffering;
+        break;
+      case 'getVideoBuffer':
+        that.videoBuffer = data.buffer;
+        break;
+      case 'getAudioBuffer':
+        that.audioBuffer = data.buffer;
+        break;
     }
   };
 
@@ -133,6 +142,29 @@ function AVSource(ws_client, server_init) {
       type: 'audio',
       data: { metadata, data, msg_ts }
     });
+  };
+
+  this.isRebuffering = function () {
+    worker.postMessage({ type: 'isRebuffering' });
+    return that.rebuffering;
+  };
+
+  this.getVideoBuffer = function () {
+    worker.postMessage({ type: 'getVideoBuffer' });
+    return that.videoBuffer;
+  };
+
+  this.getAudioBuffer = function () {
+    worker.postMessage({ type: 'getAudioBuffer' });
+    return that.audioBuffer;
+  };
+
+  this.vbuf_update = function () {
+    worker.postMessage({ type: 'vbuf_update' });
+  };
+
+  this.abuf_update = function () {
+    worker.postMessage({ type: 'abuf_update' });
   };
 
   /* Initialization */

@@ -14,6 +14,15 @@ self.onmessage = function (e) {
         case 'close':
             self.closeWorker();
             break;
+        case 'isRebuffering':
+            self.postMessage({ type: 'isRebuffering', rebuffering: self.isRebuffering() });
+            break;
+        case 'getVideoBuffer':
+            self.postMessage({ type: 'getVideoBuffer', buffer: self.getVideoBuffer() });
+            break;
+        case 'getAudioBuffer':
+            self.postMessage({ type: 'getAudioBuffer', buffer: self.getAudioBuffer() });
+            break;
     }
 };
 
@@ -153,6 +162,38 @@ self.concat_arraybuffers = function (arr, len) {
         return i + x.byteLength;
     }, 0);
     return tmp.buffer;
+};
+
+self.isRebuffering = function () {
+    const tolerance = 0.1; // seconds
+
+    if (self.vbuf && self.vbuf.buffered.length === 1 &&
+        self.abuf && self.abuf.buffered.length === 1) {
+        const min_buf = Math.min(self.vbuf.buffered.end(0), self.abuf.buffered.end(0));
+        if (min_buf - video.currentTime >= tolerance) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+self.getVideoBuffer = function () {
+    if (self.vbuf && self.vbuf.buffered.length === 1 &&
+        self.vbuf.buffered.end(0) >= video.currentTime) {
+        return self.vbuf.buffered.end(0) - video.currentTime;
+    }
+
+    return 0;
+};
+
+self.getAudioBuffer = function () {
+    if (self.abuf && self.abuf.buffered.length === 1 &&
+        self.abuf.buffered.end(0) >= video.currentTime) {
+        return self.abuf.buffered.end(0) - video.currentTime;
+    }
+
+    return 0;
 };
 
 self.closeWorker = function () {
