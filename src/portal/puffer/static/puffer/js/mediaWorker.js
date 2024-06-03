@@ -42,16 +42,11 @@ self.initWorker = function (data) {
     self.ms.addEventListener('sourceclose', self.closeWorker);
     self.ms.addEventListener('error', self.closeWorker);
 
-    self.video.src = URL.createObjectURL(self.ms);
-    self.video.load();
+    self.postMessage({ type: 'ms_url', url: URL.createObjectURL(self.ms) });
 };
 
 self.initSourceBuffers = function () {
     console.log('Initializing new media source buffer');
-
-    URL.revokeObjectURL(self.video.src);
-
-    self.video.currentTime = self.init_seek_ts / self.timescale;
 
     self.vbuf = self.ms.addSourceBuffer(self.video_codec);
     try {

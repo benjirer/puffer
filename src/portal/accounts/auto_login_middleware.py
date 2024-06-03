@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.http import HttpResponse
 import random
 import string
 
@@ -10,7 +11,11 @@ class AutoCreateUserMiddleware:
 
     def __call__(self, request):
         # Check if the user is authenticated
-        if not request.user.is_authenticated:
+        if request.user.is_authenticated:
+            return HttpResponse(
+                "Viewing multiple streams at the same time is not permitted, sorry."
+            )
+        else:
             # Automatically create a new user
             username = "".join(
                 random.choices(string.ascii_lowercase + string.digits, k=8)

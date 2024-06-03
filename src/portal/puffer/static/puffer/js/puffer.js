@@ -89,7 +89,7 @@ function AVSource(ws_client, server_init) {
     server_init.initVideoTimestamp);
 
   /* Initialize Web Worker */
-  var worker = new Worker('mediaWorker.js');
+  var worker = new Worker('static/puffer/js/mediaWorker.js');
 
   worker.onmessage = function (e) {
     const { type, data } = e.data;
@@ -104,6 +104,10 @@ function AVSource(ws_client, server_init) {
         break;
       case 'audio_ack':
         ws_client.send_client_ack('client-audack', data);
+        break;
+      case 'ms_url':
+        video.src = data.url;
+        video.load();
         break;
     }
   };
@@ -142,8 +146,7 @@ function AVSource(ws_client, server_init) {
       videoDuration: video_duration,
       audioDuration: audio_duration,
       initAudioTimestamp: server_init.initAudioTimestamp,
-      initVideoTimestamp: server_init.initVideoTimestamp,
-      video: video
+      initVideoTimestamp: server_init.initVideoTimestamp
     }
   });
 }
