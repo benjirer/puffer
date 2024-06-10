@@ -108,7 +108,7 @@ function AVSource(ws_client, server_init) {
 
     switch (message.type) {
       case 'initialized':
-        video.srcObject = message.handle;
+        video.srcObject = message.arg;
         video.load();
 
         ms.addEventListener('sourceopen', function () {

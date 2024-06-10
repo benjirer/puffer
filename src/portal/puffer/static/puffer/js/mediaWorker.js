@@ -74,7 +74,7 @@ function initializeMediaSource() {
     });
 
     const handle = mediaSource.handle;
-    postMessage({ type: 'initialized', handle: handle });
+    postMessage({ type: 'initialized', arg: handle }, [handle]);
 }
 
 function setupSourceBuffers() {
