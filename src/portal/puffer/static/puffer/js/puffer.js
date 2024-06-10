@@ -91,8 +91,48 @@ function AVSource(ws_client, server_init) {
   var next_audio_timestamp = server_init.initAudioTimestamp;
 
   var worker = new Worker('mediaWorker.js');
+  var mediaSourceHandle;
 
-  // Initialize worker
+  worker.onmessage = function (event) {
+    switch (event.data.type) {
+      case 'mediaSourceHandle':
+        mediaSourceHandle = event.data.handle;
+        video.srcObject = mediaSourceHandle;
+        video.load();
+        break;
+      case 'clientAck':
+        ws_client.send_client_ack(event.data.ackType, event.data.metadata);
+        break;
+      case 'setVideoFormat':
+        that.curr_video_format = event.data.value;
+        break;
+      case 'setSSIMdB':
+        that.curr_ssim = event.data.value;
+        break;
+      case 'setVideoBitrate':
+        that.curr_video_bitrate = event.data.value;
+        break;
+      case 'setAudioFormat':
+        that.curr_audio_format = event.data.value;
+        break;
+      case 'setVideoBuffer':
+        that.videoBuffer = event.data.value;
+        break;
+      case 'setAudioBuffer':
+        that.audioBuffer = event.data.value;
+        break;
+      case 'setRebuffering':
+        that.rebuffering = event.data.value;
+        break;
+      case 'setNextVideoTimestamp':
+        next_video_timestamp = event.data.value;
+        break;
+      case 'setNextAudioTimestamp':
+        next_audio_timestamp = event.data.value;
+        break;
+    }
+  };
+
   worker.postMessage({
     type: 'init',
     server_init: server_init,
@@ -103,9 +143,6 @@ function AVSource(ws_client, server_init) {
     audio_duration: audio_duration,
     init_seek_ts: init_seek_ts
   });
-
-  video.srcObject = new MediaSourceHandle(worker);
-  video.load();
 
   this.isOpen = function () {
     return worker !== null;
@@ -146,78 +183,89 @@ function AVSource(ws_client, server_init) {
     return channel;
   };
 
-  this.getVideoFormat = function () {
+  this.getVideoFormat = function (callback) {
     worker.postMessage({ type: 'getVideoFormat' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setVideoFormat') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getSSIMdB = function () {
+  this.getSSIMdB = function (callback) {
     worker.postMessage({ type: 'getSSIMdB' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setSSIMdB') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getVideoBitrate = function () {
+  this.getVideoBitrate = function (callback) {
     worker.postMessage({ type: 'getVideoBitrate' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setVideoBitrate') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getAudioFormat = function () {
+  this.getAudioFormat = function (callback) {
     worker.postMessage({ type: 'getAudioFormat' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setAudioFormat') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getVideoBuffer = function () {
+  this.getVideoBuffer = function (callback) {
     worker.postMessage({ type: 'getVideoBuffer' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setVideoBuffer') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getAudioBuffer = function () {
+  this.getAudioBuffer = function (callback) {
     worker.postMessage({ type: 'getAudioBuffer' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setAudioBuffer') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.isRebuffering = function () {
+  this.isRebuffering = function (callback) {
     worker.postMessage({ type: 'isRebuffering' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setRebuffering') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getNextVideoTimestamp = function () {
+  this.getNextVideoTimestamp = function (callback) {
     worker.postMessage({ type: 'getNextVideoTimestamp' });
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setNextVideoTimestamp') {
+        callback(event.data.value);
+      }
+    };
   };
 
-  this.getNextAudioTimestamp = function () {
+  this.getNextAudioTimestamp = function (callback) {
     worker.postMessage({ type: 'getNextAudioTimestamp' });
-  };
-
-  // Listen for messages from the worker
-  worker.onmessage = function (event) {
-    switch (event.data.type) {
-      case 'setVideoFormat':
-        that.curr_video_format = event.data.value;
-        break;
-      case 'setSSIMdB':
-        that.curr_ssim = event.data.value;
-        break;
-      case 'setVideoBitrate':
-        that.curr_video_bitrate = event.data.value;
-        break;
-      case 'setAudioFormat':
-        that.curr_audio_format = event.data.value;
-        break;
-      case 'setVideoBuffer':
-        that.videoBuffer = event.data.value;
-        break;
-      case 'setAudioBuffer':
-        that.audioBuffer = event.data.value;
-        break;
-      case 'setRebuffering':
-        that.rebuffering = event.data.value;
-        break;
-      case 'setNextVideoTimestamp':
-        next_video_timestamp = event.data.value;
-        break;
-      case 'setNextAudioTimestamp':
-        next_audio_timestamp = event.data.value;
-        break;
-      case 'clientAck':
-        ws_client.send_client_ack(event.data.ackType, event.data.metadata);
-        break;
-    }
+    worker.onmessage = function (event) {
+      if (event.data.type === 'setNextAudioTimestamp') {
+        callback(event.data.value);
+      }
+    };
   };
 }
+
+
 
 function WebSocketClient(session_key, username_in, settings_debug, port_in,
   csrf_token_in, sysinfo) {

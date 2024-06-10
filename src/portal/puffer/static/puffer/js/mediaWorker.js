@@ -7,6 +7,7 @@ let curr_video_format, curr_ssim, curr_video_bitrate;
 let curr_audio_format;
 let vbuf_couple = [];
 let abuf_couple = [];
+let mediaSource;
 
 onmessage = function (event) {
     switch (event.data.type) {
@@ -59,19 +60,19 @@ function init(data) {
     next_video_timestamp = data.server_init.initVideoTimestamp;
     next_audio_timestamp = data.server_init.initAudioTimestamp;
 
-    let ms = new MediaSource();
-    ms.addEventListener('sourceopen', () => {
-        vbuf = ms.addSourceBuffer(video_codec);
-        abuf = ms.addSourceBuffer(audio_codec);
+    mediaSource = new MediaSource();
+    mediaSource.addEventListener('sourceopen', () => {
+        vbuf = mediaSource.addSourceBuffer(video_codec);
+        abuf = mediaSource.addSourceBuffer(audio_codec);
 
         vbuf.addEventListener('updateend', vbuf_update);
         abuf.addEventListener('updateend', abuf_update);
     });
-    ms.addEventListener('sourceended', close);
-    ms.addEventListener('sourceclose', close);
-    ms.addEventListener('error', close);
+    mediaSource.addEventListener('sourceended', close);
+    mediaSource.addEventListener('sourceclose', close);
+    mediaSource.addEventListener('error', close);
 
-    video.srcObject = ms;
+    postMessage({ type: 'mediaSourceHandle', handle: mediaSource });
 }
 
 function handleVideo(metadata, data) {
