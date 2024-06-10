@@ -100,7 +100,7 @@ function AVSource(ws_client, server_init) {
   var abuf_couple = [];
 
   // Initialize worker
-  const worker = new Worker('mediaWorker.js');
+  const worker = new Worker('/static/puffer/js/mediaWorker.js');
 
   // Event listener for messages from the worker
   worker.onmessage = function (e) {
