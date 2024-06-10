@@ -87,72 +87,94 @@ function AVSource(ws_client, server_init) {
   const audio_duration = server_init.audioDuration;
   const init_seek_ts = Math.max(server_init.initAudioTimestamp, server_init.initVideoTimestamp);
 
+  /* Timestamps for the next chunks that the player is expecting */
   var next_video_timestamp = server_init.initVideoTimestamp;
   var next_audio_timestamp = server_init.initAudioTimestamp;
 
-  var worker = new Worker('mediaWorker.js');
-  var mediaSourceHandle;
+  /* Add pending chunks to SourceBuffers only if SourceBuffers
+   * are initialized and ready to accept more chunks */
+  var pending_video_chunks = [];
+  var pending_audio_chunks = [];
 
-  worker.onmessage = function (event) {
-    switch (event.data.type) {
-      case 'mediaSourceHandle':
-        mediaSourceHandle = event.data.handle;
-        video.srcObject = mediaSourceHandle;
+  var vbuf_couple = [];
+  var abuf_couple = [];
+
+  // Initialize worker
+  const worker = new Worker('mediaWorker.js');
+
+  // Event listener for messages from the worker
+  worker.onmessage = function (e) {
+    const message = e.data;
+
+    switch (message.type) {
+      case 'initialized':
+        const handle = message.handle;
+        const ms = new MediaSource();
+        ms.handle = handle;
+        video.srcObject = ms;
         video.load();
+
+        ms.addEventListener('sourceopen', function () {
+          worker.postMessage({ type: 'sourceopen' });
+        });
+
         break;
-      case 'clientAck':
-        ws_client.send_client_ack(event.data.ackType, event.data.metadata);
+
+      case 'vbuf_update':
+        if (vbuf_couple.length > 0) {
+          var data_to_ack = vbuf_couple.shift();
+          ws_client.send_client_ack('client-vidack', data_to_ack);
+        }
         break;
-      case 'setVideoFormat':
-        that.curr_video_format = event.data.value;
+
+      case 'abuf_update':
+        if (abuf_couple.length > 0) {
+          var data_to_ack = abuf_couple.shift();
+          ws_client.send_client_ack('client-audack', data_to_ack);
+        }
         break;
-      case 'setSSIMdB':
-        that.curr_ssim = event.data.value;
+
+      case 'error':
+        console.log('Worker error:', message.error);
+        that.close();
         break;
-      case 'setVideoBitrate':
-        that.curr_video_bitrate = event.data.value;
-        break;
-      case 'setAudioFormat':
-        that.curr_audio_format = event.data.value;
-        break;
-      case 'setVideoBuffer':
-        that.videoBuffer = event.data.value;
-        break;
-      case 'setAudioBuffer':
-        that.audioBuffer = event.data.value;
-        break;
-      case 'setRebuffering':
-        that.rebuffering = event.data.value;
-        break;
-      case 'setNextVideoTimestamp':
-        next_video_timestamp = event.data.value;
-        break;
-      case 'setNextAudioTimestamp':
-        next_audio_timestamp = event.data.value;
-        break;
+
+      default:
+        console.log('Unknown message from worker:', message);
     }
   };
 
+  /* used by handleVideo */
+  var curr_video_format = null;
+  var curr_ssim = null;
+  var curr_video_bitrate = null;  // kbps
+  var partial_video_chunks = null;
+
+  /* used by handleAudio */
+  var curr_audio_format = null;
+  var partial_audio_chunks = null;
+
+  // Initialize MediaSourceHandle through the worker
   worker.postMessage({
-    type: 'init',
-    server_init: server_init,
-    video_codec: video_codec,
-    audio_codec: audio_codec,
-    timescale: timescale,
-    video_duration: video_duration,
-    audio_duration: audio_duration,
-    init_seek_ts: init_seek_ts
+    type: 'initialize',
+    videoCodec: video_codec,
+    audioCodec: audio_codec,
+    initSeekTs: init_seek_ts / timescale
   });
 
   this.isOpen = function () {
+    // Check if the worker is ready
     return worker !== null;
   };
 
   this.close = function () {
-    if (worker) {
-      worker.terminate();
-      worker = null;
-    }
+    console.log('Closing media source buffer');
+
+    worker.terminate();
+    vbuf_couple = [];
+    abuf_couple = [];
+    pending_video_chunks = [];
+    pending_audio_chunks = [];
   };
 
   this.handleVideo = function (metadata, data, msg_ts) {
@@ -160,11 +182,32 @@ function AVSource(ws_client, server_init) {
       console.log('error: should have ignored data from incorrect channel');
       return;
     }
-    worker.postMessage({
-      type: 'handleVideo',
-      metadata: metadata,
-      data: data
-    });
+
+    if (curr_video_format !== metadata.format) {
+      curr_video_format = metadata.format;
+      partial_video_chunks = [];
+    }
+    partial_video_chunks.push(data);
+
+    curr_ssim = metadata.ssim;
+
+    if (data.byteLength + metadata.byteOffset === metadata.totalByteLength) {
+      pending_video_chunks.push({
+        metadata: metadata,
+        data: concat_arraybuffers(partial_video_chunks, metadata.totalByteLength)
+      });
+      partial_video_chunks = [];
+
+      next_video_timestamp = metadata.timestamp + video_duration;
+      curr_video_bitrate = 0.001 * 8 * metadata.totalByteLength / (video_duration / timescale);
+
+      worker.postMessage({
+        type: 'vbuf_update',
+        chunk: pending_video_chunks.shift()
+      });
+    } else {
+      ws_client.send_client_ack('client-vidack', metadata);
+    }
   };
 
   this.handleAudio = function (metadata, data, msg_ts) {
@@ -172,100 +215,89 @@ function AVSource(ws_client, server_init) {
       console.log('error: should have ignored data from incorrect channel');
       return;
     }
-    worker.postMessage({
-      type: 'handleAudio',
-      metadata: metadata,
-      data: data
-    });
+
+    if (curr_audio_format !== metadata.format) {
+      curr_audio_format = metadata.format;
+      partial_audio_chunks = [];
+    }
+    partial_audio_chunks.push(data);
+
+    if (data.byteLength + metadata.byteOffset === metadata.totalByteLength) {
+      pending_audio_chunks.push({
+        metadata: metadata,
+        data: concat_arraybuffers(partial_audio_chunks, metadata.totalByteLength)
+      });
+      partial_audio_chunks = [];
+
+      next_audio_timestamp = metadata.timestamp + audio_duration;
+
+      worker.postMessage({
+        type: 'abuf_update',
+        chunk: pending_audio_chunks.shift()
+      });
+    } else {
+      ws_client.send_client_ack('client-audack', metadata);
+    }
   };
 
+  /* accessors */
   this.getChannel = function () {
     return channel;
   };
 
-  this.getVideoFormat = function (callback) {
-    worker.postMessage({ type: 'getVideoFormat' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setVideoFormat') {
-        callback(event.data.value);
-      }
-    };
+  this.getVideoFormat = function () {
+    return curr_video_format;
   };
 
-  this.getSSIMdB = function (callback) {
-    worker.postMessage({ type: 'getSSIMdB' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setSSIMdB') {
-        callback(event.data.value);
-      }
-    };
+  this.getSSIMdB = function () {
+    return -10 * Math.log10(1 - curr_ssim);
   };
 
-  this.getVideoBitrate = function (callback) {
-    worker.postMessage({ type: 'getVideoBitrate' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setVideoBitrate') {
-        callback(event.data.value);
-      }
-    };
+  this.getVideoBitrate = function () {
+    return curr_video_bitrate;
   };
 
-  this.getAudioFormat = function (callback) {
-    worker.postMessage({ type: 'getAudioFormat' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setAudioFormat') {
-        callback(event.data.value);
-      }
-    };
+  this.getAudioFormat = function () {
+    return curr_audio_format;
   };
 
-  this.getVideoBuffer = function (callback) {
-    worker.postMessage({ type: 'getVideoBuffer' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setVideoBuffer') {
-        callback(event.data.value);
-      }
-    };
+  this.getVideoBuffer = function () {
+    if (vbuf && vbuf.buffered.length === 1 && vbuf.buffered.end(0) >= video.currentTime) {
+      return vbuf.buffered.end(0) - video.currentTime;
+    }
+
+    return 0;
   };
 
-  this.getAudioBuffer = function (callback) {
-    worker.postMessage({ type: 'getAudioBuffer' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setAudioBuffer') {
-        callback(event.data.value);
-      }
-    };
+  this.getAudioBuffer = function () {
+    if (abuf && abuf.buffered.length === 1 && abuf.buffered.end(0) >= video.currentTime) {
+      return abuf.buffered.end(0) - video.currentTime;
+    }
+
+    return 0;
   };
 
-  this.isRebuffering = function (callback) {
-    worker.postMessage({ type: 'isRebuffering' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setRebuffering') {
-        callback(event.data.value);
+  this.isRebuffering = function () {
+    const tolerance = 0.1; // seconds
+
+    if (vbuf && vbuf.buffered.length === 1 && abuf && abuf.buffered.length === 1) {
+      const min_buf = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
+      if (min_buf - video.currentTime >= tolerance) {
+        return false;
       }
-    };
+    }
+
+    return true;
   };
 
-  this.getNextVideoTimestamp = function (callback) {
-    worker.postMessage({ type: 'getNextVideoTimestamp' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setNextVideoTimestamp') {
-        callback(event.data.value);
-      }
-    };
+  this.getNextVideoTimestamp = function () {
+    return next_video_timestamp;
   };
 
-  this.getNextAudioTimestamp = function (callback) {
-    worker.postMessage({ type: 'getNextAudioTimestamp' });
-    worker.onmessage = function (event) {
-      if (event.data.type === 'setNextAudioTimestamp') {
-        callback(event.data.value);
-      }
-    };
+  this.getNextAudioTimestamp = function () {
+    return next_audio_timestamp;
   };
 }
-
-
 
 function WebSocketClient(session_key, username_in, settings_debug, port_in,
   csrf_token_in, sysinfo) {
