@@ -1,13 +1,19 @@
 let mediaSource = null;
 let vbuf = null;
 let abuf = null;
+let videoCodec = null;
+let audioCodec = null;
+let initSeekTs = null;
 
 self.onmessage = function (e) {
     const message = e.data;
 
     switch (message.type) {
         case 'initialize':
-            initializeMediaSource(message.videoCodec, message.audioCodec, message.initSeekTs);
+            videoCodec = message.videoCodec;
+            audioCodec = message.audioCodec;
+            initSeekTs = message.initSeekTs;
+            initializeMediaSource();
             break;
 
         case 'sourceopen':
@@ -16,16 +22,35 @@ self.onmessage = function (e) {
 
         case 'vbuf_update':
             if (vbuf && !vbuf.updating) {
-                vbuf.appendBuffer(message.chunk.data);
+                const chunk = message.chunk;
+                vbuf.appendBuffer(chunk.data);
                 postMessage({ type: 'vbuf_update' });
             }
             break;
 
         case 'abuf_update':
             if (abuf && !abuf.updating) {
-                abuf.appendBuffer(message.chunk.data);
+                const chunk = message.chunk;
+                abuf.appendBuffer(chunk.data);
                 postMessage({ type: 'abuf_update' });
             }
+            break;
+
+        case 'getVideoBuffer':
+            const videoBuffer = (vbuf && vbuf.buffered.length > 0) ? vbuf.buffered.end(0) - mediaSource.duration : 0;
+            postMessage({ type: 'videoBuffer', buffer: videoBuffer });
+            break;
+
+        case 'getAudioBuffer':
+            const audioBuffer = (abuf && abuf.buffered.length > 0) ? abuf.buffered.end(0) - mediaSource.duration : 0;
+            postMessage({ type: 'audioBuffer', buffer: audioBuffer });
+            break;
+
+        case 'isRebuffering':
+            const tolerance = 0.1; // seconds
+            const minBuffer = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
+            const isRebuffering = minBuffer - mediaSource.duration < tolerance;
+            postMessage({ type: 'rebufferingStatus', status: isRebuffering });
             break;
 
         default:
@@ -33,7 +58,7 @@ self.onmessage = function (e) {
     }
 };
 
-function initializeMediaSource(videoCodec, audioCodec, initSeekTs) {
+function initializeMediaSource() {
     mediaSource = new MediaSource();
 
     mediaSource.addEventListener('sourceopen', function () {

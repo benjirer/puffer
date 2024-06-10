@@ -108,10 +108,7 @@ function AVSource(ws_client, server_init) {
 
     switch (message.type) {
       case 'initialized':
-        const handle = message.handle;
-        const ms = new MediaSource();
-        ms.handle = handle;
-        video.srcObject = ms;
+        video.srcObject = message.handle;
         video.load();
 
         ms.addEventListener('sourceopen', function () {
@@ -163,8 +160,8 @@ function AVSource(ws_client, server_init) {
   });
 
   this.isOpen = function () {
-    // Check if the worker is ready
-    return worker !== null;
+    // Check if media source is open
+    return video.srcObject !== null;
   };
 
   this.close = function () {
@@ -262,32 +259,39 @@ function AVSource(ws_client, server_init) {
   };
 
   this.getVideoBuffer = function () {
-    if (vbuf && vbuf.buffered.length === 1 && vbuf.buffered.end(0) >= video.currentTime) {
-      return vbuf.buffered.end(0) - video.currentTime;
-    }
+    return new Promise((resolve, reject) => {
+      worker.onmessage = function (event) {
+        if (event.data.type === 'videoBuffer') {
+          resolve(event.data.buffer);
+        }
+      };
 
-    return 0;
+      worker.postMessage({ type: 'getVideoBuffer' });
+    });
   };
 
   this.getAudioBuffer = function () {
-    if (abuf && abuf.buffered.length === 1 && abuf.buffered.end(0) >= video.currentTime) {
-      return abuf.buffered.end(0) - video.currentTime;
-    }
+    return new Promise((resolve, reject) => {
+      worker.onmessage = function (event) {
+        if (event.data.type === 'audioBuffer') {
+          resolve(event.data.buffer);
+        }
+      };
 
-    return 0;
+      worker.postMessage({ type: 'getAudioBuffer' });
+    });
   };
 
   this.isRebuffering = function () {
-    const tolerance = 0.1; // seconds
+    return new Promise((resolve, reject) => {
+      worker.onmessage = function (event) {
+        if (event.data.type === 'rebufferingStatus') {
+          resolve(event.data.status);
+        }
+      };
 
-    if (vbuf && vbuf.buffered.length === 1 && abuf && abuf.buffered.length === 1) {
-      const min_buf = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
-      if (min_buf - video.currentTime >= tolerance) {
-        return false;
-      }
-    }
-
-    return true;
+      worker.postMessage({ type: 'isRebuffering' });
+    });
   };
 
   this.getNextVideoTimestamp = function () {
@@ -296,6 +300,14 @@ function AVSource(ws_client, server_init) {
 
   this.getNextAudioTimestamp = function () {
     return next_audio_timestamp;
+  };
+
+  this.vbuf_update = function () {
+    worker.postMessage({ type: 'vbuf_update' });
+  };
+
+  this.abuf_update = function () {
+    worker.postMessage({ type: 'abuf_update' });
   };
 }
 
