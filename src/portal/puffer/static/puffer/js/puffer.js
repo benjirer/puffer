@@ -99,6 +99,8 @@ function AVSource(ws_client, server_init) {
   var vbuf_couple = [];
   var abuf_couple = [];
 
+  var is_open = false;
+
   // Initialize worker
   const worker = new Worker('/static/puffer/js/mediaWorker.js');
 
@@ -110,11 +112,10 @@ function AVSource(ws_client, server_init) {
       case 'initialized':
         video.srcObject = message.arg;
         video.load();
+        break;
 
-        ms.addEventListener('sourceopen', function () {
-          worker.postMessage({ type: 'sourceopen' });
-        });
-
+      case 'sourceopen':
+        is_open = true;
         break;
 
       case 'vbuf_update':

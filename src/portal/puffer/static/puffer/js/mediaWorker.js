@@ -16,10 +16,6 @@ self.onmessage = function (e) {
             initializeMediaSource();
             break;
 
-        case 'sourceopen':
-            setupSourceBuffers();
-            break;
-
         case 'vbuf_update':
             if (vbuf && !vbuf.updating) {
                 const chunk = message.chunk;
@@ -62,7 +58,7 @@ function initializeMediaSource() {
     mediaSource = new MediaSource();
 
     mediaSource.addEventListener('sourceopen', function () {
-        postMessage({ type: 'sourceopen' });
+        setupSourceBuffers();
     });
 
     mediaSource.addEventListener('error', function (e) {
@@ -83,6 +79,8 @@ function setupSourceBuffers() {
 
     vbuf.timestampOffset = initSeekTs;
     abuf.timestampOffset = initSeekTs;
+
+    postMessage({ type: 'sourceopen' });
 
     vbuf.addEventListener('updateend', function () {
         postMessage({ type: 'vbuf_update' });
