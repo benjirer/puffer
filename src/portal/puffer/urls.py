@@ -25,7 +25,7 @@ urlpatterns = [
     path("bola/", views.bola, name="bola"),
     path("error_reporting/", views.error_reporting, name="error_reporting"),
     path(
-        "mutiple_sessions_not_allowed/",
+        "multiple_sessions_not_allowed/",
         views.multiple_sessions_not_allowed,
         name="multiple_sessions_not_allowed",
     ),
