@@ -33,20 +33,32 @@ self.onmessage = function (e) {
             break;
 
         case 'getVideoBuffer':
-            const videoBuffer = (vbuf && vbuf.buffered.length > 0) ? vbuf.buffered.end(0) - mediaSource.duration : 0;
-            postMessage({ type: 'videoBuffer', buffer: videoBuffer });
+            if (vbuf && vbuf.buffered.length === 1 && vbuf.buffered.end(0) >= message.currentTime) {
+                postMessage({ type: 'videoBuffer', buffer: vbuf.buffered.end(0) - message.currentTime });
+            } else {
+                postMessage({ type: 'videoBuffer', buffer: 0 });
+            }
             break;
 
         case 'getAudioBuffer':
-            const audioBuffer = (abuf && abuf.buffered.length > 0) ? abuf.buffered.end(0) - mediaSource.duration : 0;
-            postMessage({ type: 'audioBuffer', buffer: audioBuffer });
+            if (abuf && abuf.buffered.length === 1 && abuf.buffered.end(0) >= message.currentTime) {
+                postMessage({ type: 'audioBuffer', buffer: abuf.buffered.end(0) - message.currentTime });
+            } else {
+                postMessage({ type: 'audioBuffer', buffer: 0 });
+            }
             break;
 
         case 'isRebuffering':
             const tolerance = 0.1; // seconds
-            const minBuffer = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
-            const isRebuffering = minBuffer - mediaSource.duration < tolerance;
-            postMessage({ type: 'rebufferingStatus', status: isRebuffering });
+
+            if (vbuf && vbuf.buffered.length === 1 && abuf && abuf.buffered.length === 1) {
+                const min_buf = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
+                if (min_buf - message.currentTime >= tolerance) {
+                    postMessage({ type: 'rebuffering', rebuffering: false });
+                } else {
+                    postMessage({ type: 'rebuffering', rebuffering: true });
+                }
+            }
             break;
 
         default:
@@ -77,8 +89,8 @@ function setupSourceBuffers() {
     vbuf = mediaSource.addSourceBuffer(videoCodec);
     abuf = mediaSource.addSourceBuffer(audioCodec);
 
-    vbuf.timestampOffset = initSeekTs;
-    abuf.timestampOffset = initSeekTs;
+    // vbuf.timestampOffset = initSeekTs;
+    // abuf.timestampOffset = initSeekTs;
 
     postMessage({ type: 'sourceopen' });
 
