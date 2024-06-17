@@ -27,18 +27,6 @@ function set_fatal_error(error_message) {
     hide_play_button();
 }
 
-// function report_error(init_id, error_description) {
-//   var xhr = new XMLHttpRequest();
-//   xhr.open('POST', '/error_reporting/');
-//   xhr.setRequestHeader('Content-Type', 'application/json');
-//   xhr.setRequestHeader('X-CSRFToken', csrf_token);
-//   xhr.send(JSON.stringify({
-//     'username': username,
-//     'init_id': init_id,
-//     'error': error_description
-//   }));
-// }
-
 /* Server messages are of the form: "short_metadata_len|metadata_json|data" */
 function parse_server_msg(data) {
     var metadata_len = new DataView(data, 0, 2).getUint16(0);
@@ -112,10 +100,12 @@ function AVSource(ws_client, server_init) {
     var curr_audio_format = null;
     var partial_audio_chunks = null;
 
+    timer = init_seek_ts / timescale;
+
     /* Initialize video and audio buffers */
     function init_buffers() {
         console.log('Initializing new buffers');
-        timer = init_seek_ts / timescale;
+
         vbuf_couple = [];
         abuf_couple = [];
 
@@ -739,45 +729,45 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     setInterval(check_conn_timeout, 1000);
 
     /* update debug info every 500 ms */
-    // function update_debug_info() {
-    //     if (fatal_error) {
-    //         return;
-    //     }
+    function update_debug_info() {
+        if (fatal_error) {
+            return;
+        }
 
-    //     const na = 'N/A';
-    //     var video_buf = document.getElementById('video-buf');
-    //     var video_res = document.getElementById('video-res');
-    //     var video_crf = document.getElementById('video-crf');
-    //     var video_ssim = document.getElementById('video-ssim');
-    //     var video_bitrate = document.getElementById('video-bitrate');
+        const na = 'N/A';
+        var video_buf = document.getElementById('video-buf');
+        var video_res = document.getElementById('video-res');
+        var video_crf = document.getElementById('video-crf');
+        var video_ssim = document.getElementById('video-ssim');
+        var video_bitrate = document.getElementById('video-bitrate');
 
-    //     if (av_source && av_source.isOpen()) {
-    //         video_buf.innerHTML = av_source.getVideoBuffer().toFixed(1);
+        if (av_source && av_source.isOpen()) {
+            video_buf.innerHTML = av_source.getVideoBuffer().toFixed(1);
 
-    //         var vformat_val = av_source.getVideoFormat();
-    //         if (vformat_val) {
-    //             const [vres_val, vcrf_val] = vformat_val.split('-');
-    //             video_res.innerHTML = vres_val;
-    //             video_crf.innerHTML = vcrf_val;
-    //         } else {
-    //             video_res.innerHTML = na;
-    //             video_crf.innerHTML = na;
-    //         }
+            var vformat_val = av_source.getVideoFormat();
+            if (vformat_val) {
+                const [vres_val, vcrf_val] = vformat_val.split('-');
+                video_res.innerHTML = vres_val;
+                video_crf.innerHTML = vcrf_val;
+            } else {
+                video_res.innerHTML = na;
+                video_crf.innerHTML = na;
+            }
 
-    //         const vssim_val = av_source.getSSIMdB();
-    //         video_ssim.innerHTML = vssim_val ? vssim_val.toFixed(2) : na;
+            const vssim_val = av_source.getSSIMdB();
+            video_ssim.innerHTML = vssim_val ? vssim_val.toFixed(2) : na;
 
-    //         const vbitrate_val = av_source.getVideoBitrate();
-    //         video_bitrate.innerHTML = vbitrate_val ? vbitrate_val.toFixed(2) : na;
-    //     } else {
-    //         video_buf.innerHTML = na;
-    //         video_res.innerHTML = na;
-    //         video_crf.innerHTML = na;
-    //         video_ssim.innerHTML = na;
-    //         video_bitrate.innerHTML = na;
-    //     }
-    // }
-    // setInterval(update_debug_info, 500);
+            const vbitrate_val = av_source.getVideoBitrate();
+            video_bitrate.innerHTML = vbitrate_val ? vbitrate_val.toFixed(2) : na;
+        } else {
+            video_buf.innerHTML = na;
+            video_res.innerHTML = na;
+            video_crf.innerHTML = na;
+            video_ssim.innerHTML = na;
+            video_bitrate.innerHTML = na;
+        }
+    }
+    setInterval(update_debug_info, 500);
 
     /* start timer when script is loaded */
     timerInterval = setInterval(function () {
