@@ -25,17 +25,17 @@ function set_fatal_error(error_message) {
   hide_play_button();
 }
 
-// function report_error(init_id, error_description) {
-//   var xhr = new XMLHttpRequest();
-//   xhr.open('POST', '/error_reporting/');
-//   xhr.setRequestHeader('Content-Type', 'application/json');
-//   xhr.setRequestHeader('X-CSRFToken', csrf_token);
-//   xhr.send(JSON.stringify({
-//     'username': username,
-//     'init_id': init_id,
-//     'error': error_description
-//   }));
-// }
+function report_error(init_id, error_description) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/error_reporting/');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('X-CSRFToken', csrf_token);
+  xhr.send(JSON.stringify({
+    'username': username,
+    'init_id': init_id,
+    'error': error_description
+  }));
+}
 
 /* Server messages are of the form: "short_metadata_len|metadata_json|data" */
 function parse_server_msg(data) {
@@ -113,7 +113,7 @@ function AVSource(ws_client, server_init) {
       'which Puffer requires to stream media. Please refer to the FAQ and ' +
       'try another browser or device on which Puffer is supported.'
     );
-    // report_error(0 /* init_id is not important */, 'MSE not supported');
+    report_error(0 /* init_id is not important */, 'MSE not supported');
   }
 
   /* used by handleVideo */
@@ -147,7 +147,7 @@ function AVSource(ws_client, server_init) {
         'Opus in WebM, used by Puffer. Please refer to the FAQ and ' +
         'try another browser or device on which Puffer is supported.'
       );
-      // report_error(0 /* init_id is not important */, 'audio not supported');
+      report_error(0 /* init_id is not important */, 'audio not supported');
     }
 
     vbuf.addEventListener('updateend', function (e) {
@@ -586,7 +586,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     /* check fatal errors regardless of init_id */
     if (metadata.type === 'server-error') {
       /* report received server-error */
-      // report_error(init_id, 'server-error: ' + metadata.errorType);
+      report_error(init_id, 'server-error: ' + metadata.errorType);
 
       if (metadata.errorType === 'maintenance') {
         set_fatal_error(metadata.errorMessage);
@@ -699,7 +699,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
           add_player_error(
             'Error: failed to connect to server. Reconnecting...', 'connect'
           );
-          // report_error(init_id, 'reconnect');
+          report_error(init_id, 'reconnect');
 
           if (av_source) {
             /* Try to resume the connection */
@@ -714,7 +714,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         set_fatal_error(
           'Error: failed to connect to server. Please try again later.'
         );
-        // report_error(init_id, 'abort reconnect');
+        report_error(init_id, 'abort reconnect');
       }
     };
 
@@ -772,7 +772,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
           'Error: your browser prevented muted autoplay. Please click ' +
           'the play button to start playback.', 'channel');
         channel_error = true;
-        // report_error(init_id, error);
+        report_error(init_id, error);
       });
     }
   };
@@ -876,7 +876,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     if (Date.now() - last_msg_recv_ts > CONN_TIMEOUT) {
       set_fatal_error('Your connection has been closed after a timeout. ' +
         'Please reload the page.');
-      // report_error(init_id, 'connection timed out');
+      report_error(init_id, 'connection timed out');
       ws.close();
     }
   }
