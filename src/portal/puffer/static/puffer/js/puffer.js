@@ -407,7 +407,10 @@ function AVSource(ws_client, server_init) {
     // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
     this.vbuf_update = function () {
         if (vbuf != null && pending_video_chunks.length > 0) {
+            console.log('timescale', timescale);
             var next_video = pending_video_chunks.shift();
+            console.log('next video chunk', next_video);
+            console.log('next video chunk byteLength', next_video.data.byteLength);
             vbuf += next_video.data.byteLength / timescale;
             vbuf_couple.push(next_video.metadata);
         }
