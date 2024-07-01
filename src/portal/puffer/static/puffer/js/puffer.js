@@ -680,6 +680,10 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
             /* reset reconnect_backoff once a new media chunk is received */
             reconnect_backoff = BASE_RECONNECT_BACKOFF;
 
+            console.log('received metadata', metadata);
+            console.log('received data', data);
+            console.log('should call handleVideo');
+
             /* note: handleVideo can buffer chunks even if !av_source.isOpen() */
             av_source.handleVideo(metadata, data, msg_ts);
         } else if (metadata.type === 'server-audio') {
