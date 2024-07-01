@@ -278,6 +278,9 @@ function AVSource(ws_client, server_init) {
 
         curr_ssim = metadata.ssim;
 
+        console.log('metadata', metadata);
+        console.log('data', data);
+
         /* Last fragment received */
         if (data.byteLength + metadata.byteOffset === metadata.totalByteLength) {
             /* assemble partial chunks into a complete chunk */
