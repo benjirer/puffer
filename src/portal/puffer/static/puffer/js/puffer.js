@@ -363,7 +363,6 @@ function AVSource(ws_client, server_init) {
         if (vbuf > 0) {
             return vbuf;
         }
-        vbuf = 0.0;
         return 0;
     };
 
@@ -375,7 +374,6 @@ function AVSource(ws_client, server_init) {
         if (abuf > 0) {
             return abuf;
         }
-        abuf = 0.0;
         return 0;
     };
 
