@@ -214,9 +214,6 @@ function AVSource(ws_client, server_init) {
     //     }
     //   });
 
-    // modified version: just call init_source_buffers without checking ms (as it does not exist)
-    init_source_buffers();
-
     //   ms.addEventListener('sourceended', function (e) {
     //     if (debug && ms) {
     //       console.log('sourceended: ' + ms.readyState, e);
@@ -382,6 +379,7 @@ function AVSource(ws_client, server_init) {
                 return false;
             }
         }
+
         return true;
     };
 
@@ -412,6 +410,9 @@ function AVSource(ws_client, server_init) {
             abuf_couple.push(next_audio.metadata);
         }
     };
+
+    init_source_buffers();
+
 }
 
 function WebSocketClient(session_key, username_in, settings_debug, port_in,
