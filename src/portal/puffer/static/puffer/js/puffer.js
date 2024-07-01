@@ -10,9 +10,13 @@ var nonsecure = false;
 var username = '';
 var port = null;
 var csrf_token = '';
-var video = document.getElementById('tv-video');
+// var video = document.getElementById('tv-video');
 
 var fatal_error = false;
+// modified version: add timer to "track" the playback time
+var timer = 0;
+var timerInterval = null;
+
 function set_fatal_error(error_message) {
     if (fatal_error) {
         return;
@@ -25,17 +29,17 @@ function set_fatal_error(error_message) {
     hide_play_button();
 }
 
-function report_error(init_id, error_description) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/error_reporting/');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('X-CSRFToken', csrf_token);
-    xhr.send(JSON.stringify({
-        'username': username,
-        'init_id': init_id,
-        'error': error_description
-    }));
-}
+// function report_error(init_id, error_description) {
+//   var xhr = new XMLHttpRequest();
+//   xhr.open('POST', '/error_reporting/');
+//   xhr.setRequestHeader('Content-Type', 'application/json');
+//   xhr.setRequestHeader('X-CSRFToken', csrf_token);
+//   xhr.send(JSON.stringify({
+//     'username': username,
+//     'init_id': init_id,
+//     'error': error_description
+//   }));
+// }
 
 /* Server messages are of the form: "short_metadata_len|metadata_json|data" */
 function parse_server_msg(data) {
@@ -98,23 +102,24 @@ function AVSource(ws_client, server_init) {
     var pending_audio_chunks = [];
 
     /* MediaSource and SourceBuffers */
-    var ms = null;
+    // modified version: don't actually use MediaSource and SourceBuffer objects, just use arrays
+    //   var ms = null;
     var vbuf = null;
     var abuf = null;
 
     var vbuf_couple = [];
     var abuf_couple = [];
 
-    if (window.MediaSource) {
-        ms = new MediaSource();
-    } else {
-        set_fatal_error(
-            'Error: your browser does not support Media Source Extensions (MSE), ' +
-            'which Puffer requires to stream media. Please refer to the FAQ and ' +
-            'try another browser or device on which Puffer is supported.'
-        );
-        report_error(0 /* init_id is not important */, 'MSE not supported');
-    }
+    // if (window.MediaSource) {
+    //     ms = new MediaSource();
+    //   } else {
+    //     set_fatal_error(
+    //       'Error: your browser does not support Media Source Extensions (MSE), ' +
+    //       'which Puffer requires to stream media. Please refer to the FAQ and ' +
+    //       'try another browser or device on which Puffer is supported.'
+    //     );
+    //     report_error(0 /* init_id is not important */, 'MSE not supported');
+    //   }
 
     /* used by handleVideo */
     var curr_video_format = null;
@@ -126,115 +131,126 @@ function AVSource(ws_client, server_init) {
     var curr_audio_format = null;
     var partial_audio_chunks = null;
 
-    video.src = URL.createObjectURL(ms);
-    video.load();
+    // video.src = URL.createObjectURL(ms);
+    // video.load();
 
     /* Initialize video and audio source buffers, and set the initial offset */
+    // modified version: just initialize buffers as empty arrays and timer using init_seek_ts
     function init_source_buffers() {
-        console.log('Initializing new media source buffer');
+        console.log('Initializing new buffers');
+        timer = init_seek_ts / timescale;
+        vbuf = [];
+        abuf = [];
+        vbuf_couple = [];
+        abuf_couple = [];
 
-        /* https://developers.google.com/web/fundamentals/media/mse/basics */
-        URL.revokeObjectURL(video.src);
+        // /* https://developers.google.com/web/fundamentals/media/mse/basics */
+        // URL.revokeObjectURL(video.src);
 
-        video.currentTime = init_seek_ts / timescale;
+        // video.currentTime = init_seek_ts / timescale;
 
-        vbuf = ms.addSourceBuffer(video_codec);
-        try {
-            abuf = ms.addSourceBuffer(audio_codec);
-        } catch (err) {
-            set_fatal_error(
-                'Error: your browser does not support the audio format, ' +
-                'Opus in WebM, used by Puffer. Please refer to the FAQ and ' +
-                'try another browser or device on which Puffer is supported.'
-            );
-            report_error(0 /* init_id is not important */, 'audio not supported');
-        }
+        // vbuf = ms.addSourceBuffer(video_codec);
+        // try {
+        //   abuf = ms.addSourceBuffer(audio_codec);
+        // } catch (err) {
+        //   set_fatal_error(
+        //     'Error: your browser does not support the audio format, ' +
+        //     'Opus in WebM, used by Puffer. Please refer to the FAQ and ' +
+        //     'try another browser or device on which Puffer is supported.'
+        //   );
+        //   report_error(0 /* init_id is not important */, 'audio not supported');
+        // }
 
-        vbuf.addEventListener('updateend', function (e) {
-            if (vbuf_couple.length > 0) {
-                var data_to_ack = vbuf_couple.shift();
-                /* send the last ack here after buffer length is updated */
-                ws_client.send_client_ack('client-vidack', data_to_ack);
-            }
+        // vbuf.addEventListener('updateend', function (e) {
+        //   if (vbuf_couple.length > 0) {
+        //     var data_to_ack = vbuf_couple.shift();
+        //     /* send the last ack here after buffer length is updated */
+        //     ws_client.send_client_ack('client-vidack', data_to_ack);
+        //   }
 
-            that.vbuf_update();
-        });
+        //   that.vbuf_update();
+        // });
 
-        vbuf.addEventListener('error', function (e) {
-            console.log('video source buffer error:', e);
-            that.close();
-        });
+        // vbuf.addEventListener('error', function (e) {
+        //   console.log('video source buffer error:', e);
+        //   that.close();
+        // });
 
-        vbuf.addEventListener('abort', function (e) {
-            console.log('video source buffer abort:', e);
-        });
+        // vbuf.addEventListener('abort', function (e) {
+        //   console.log('video source buffer abort:', e);
+        // });
 
-        abuf.addEventListener('updateend', function (e) {
-            if (abuf_couple.length > 0) {
-                var data_to_ack = abuf_couple.shift();
-                /* send the last ack here after buffer length is updated */
-                ws_client.send_client_ack('client-audack', data_to_ack);
-            }
+        // abuf.addEventListener('updateend', function (e) {
+        //   if (abuf_couple.length > 0) {
+        //     var data_to_ack = abuf_couple.shift();
+        //     /* send the last ack here after buffer length is updated */
+        //     ws_client.send_client_ack('client-audack', data_to_ack);
+        //   }
 
-            that.abuf_update();
-        });
+        //   that.abuf_update();
+        // });
 
-        abuf.addEventListener('error', function (e) {
-            console.log('audio source buffer error:', e);
-            that.close();
-        });
+        // abuf.addEventListener('error', function (e) {
+        //   console.log('audio source buffer error:', e);
+        //   that.close();
+        // });
 
-        abuf.addEventListener('abort', function (e) {
-            console.log('audio source buffer abort:', e);
-        });
+        // abuf.addEventListener('abort', function (e) {
+        //   console.log('audio source buffer abort:', e);
+        // });
 
         /* try updating vbuf and abuf in case there are already pending chunks */
         that.vbuf_update();
         that.abuf_update();
     }
 
-    ms.addEventListener('sourceopen', function (e) {
-        if (debug && ms) {
-            console.log('sourceopen: ' + ms.readyState, e);
-        }
+    //   ms.addEventListener('sourceopen', function (e) {
+    //     if (debug && ms) {
+    //       console.log('sourceopen: ' + ms.readyState, e);
+    //     }
 
-        if (ms) {  // safeguard
-            init_source_buffers();
-        }
-    });
+    //     if (ms) {  // safeguard
+    //       init_source_buffers();
+    //     }
+    //   });
 
-    ms.addEventListener('sourceended', function (e) {
-        if (debug && ms) {
-            console.log('sourceended: ' + ms.readyState, e);
-        }
-    });
+    // modified version: just call init_source_buffers without checking ms (as it does not exist)
+    init_source_buffers();
 
-    ms.addEventListener('sourceclose', function (e) {
-        if (debug && ms) {
-            console.log('sourceclose: ' + ms.readyState, e);
-        }
-        that.close();
-    });
+    //   ms.addEventListener('sourceended', function (e) {
+    //     if (debug && ms) {
+    //       console.log('sourceended: ' + ms.readyState, e);
+    //     }
+    //   });
 
-    ms.addEventListener('error', function (e) {
-        if (ms) {
-            console.log('media source error: ' + ms.readyState, e);
-        }
-        that.close();
-    });
+    //   ms.addEventListener('sourceclose', function (e) {
+    //     if (debug && ms) {
+    //       console.log('sourceclose: ' + ms.readyState, e);
+    //     }
+    //     that.close();
+    //   });
+
+    //   ms.addEventListener('error', function (e) {
+    //     if (ms) {
+    //       console.log('media source error: ' + ms.readyState, e);
+    //     }
+    //     that.close();
+    //   });
 
     this.isOpen = function () {
-        return ms !== null && vbuf !== null && abuf !== null;
+        // modfied version: just return true if vbuf and abuf arrays are not null
+        return vbuf !== null && abuf !== null;
     };
 
     /* call "close" to garbage collect MediaSource and SourceBuffers sooner */
+    // modified version: just reset buffers to empty arrays
     this.close = function () {
-        if (ms) {
-            console.log('Closing media source buffer');
-        }
+        // if (ms) {
+        //     console.log('Closing media source buffer');
+        // }
 
         /* assign null to (hopefully) trigger garbage collection */
-        ms = null;
+        // ms = null;
         vbuf = null;
         abuf = null;
 
@@ -337,37 +353,35 @@ function AVSource(ws_client, server_init) {
     };
 
     /* Get the number of seconds of buffered video */
+    // modified version: just check the length of vbuf
     this.getVideoBuffer = function () {
-        if (vbuf && vbuf.buffered.length === 1 &&
-            vbuf.buffered.end(0) >= video.currentTime) {
-            return vbuf.buffered.end(0) - video.currentTime;
+        if (vbuf.length > 0) {
+            return vbuf.reduce((acc, chunk) => acc + (chunk.metadata.totalByteLength / timescale), 0);
         }
 
         return 0;
     };
 
     /* Get the number of seconds of buffered audio */
+    // modified version: just check the length of abuf
     this.getAudioBuffer = function () {
-        if (abuf && abuf.buffered.length === 1 &&
-            abuf.buffered.end(0) >= video.currentTime) {
-            return abuf.buffered.end(0) - video.currentTime;
+        if (abuf.length > 0) {
+            return abuf.reduce((acc, chunk) => acc + (chunk.metadata.totalByteLength / timescale), 0);
         }
 
         return 0;
     };
 
     /* If buffered *video or audio* is behind video.currentTime */
+    // modified version: just check if length of vbuf and abuf is larger than timer
     this.isRebuffering = function () {
         const tolerance = 0.1; // seconds
-
-        if (vbuf && vbuf.buffered.length === 1 &&
-            abuf && abuf.buffered.length === 1) {
-            const min_buf = Math.min(vbuf.buffered.end(0), abuf.buffered.end(0));
-            if (min_buf - video.currentTime >= tolerance) {
+        if (vbuf.length > 0 && abuf.length > 0) {
+            const min_buf = Math.min(this.getVideoBuffer(), this.getAudioBuffer());
+            if (min_buf - timer >= tolerance) {
                 return false;
             }
         }
-
         return true;
     };
 
@@ -382,18 +396,19 @@ function AVSource(ws_client, server_init) {
     };
 
     /* Push data onto the SourceBuffers if they are ready */
+    // modified version: just push metadata to vbuf_couple and abuf_couple and discard data
     this.vbuf_update = function () {
-        if (vbuf && !vbuf.updating && pending_video_chunks.length > 0) {
+        if (pending_video_chunks.length > 0) {
             var next_video = pending_video_chunks.shift();
-            vbuf.appendBuffer(next_video.data);
+            vbuf.push(next_video.data);
             vbuf_couple.push(next_video.metadata);
         }
     };
 
     this.abuf_update = function () {
-        if (abuf && !abuf.updating && pending_audio_chunks.length > 0) {
+        if (pending_audio_chunks.length > 0) {
             var next_audio = pending_audio_chunks.shift();
-            abuf.appendBuffer(next_audio.data);
+            abuf.push(next_audio.data);
             abuf_couple.push(next_audio.metadata);
         }
     };
@@ -586,7 +601,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         /* check fatal errors regardless of init_id */
         if (metadata.type === 'server-error') {
             /* report received server-error */
-            report_error(init_id, 'server-error: ' + metadata.errorType);
+            // report_error(init_id, 'server-error: ' + metadata.errorType);
 
             if (metadata.errorType === 'maintenance') {
                 set_fatal_error(metadata.errorMessage);
@@ -699,7 +714,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
                     add_player_error(
                         'Error: failed to connect to server. Reconnecting...', 'connect'
                     );
-                    report_error(init_id, 'reconnect');
+                    // report_error(init_id, 'reconnect');
 
                     if (av_source) {
                         /* Try to resume the connection */
@@ -714,7 +729,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
                 set_fatal_error(
                     'Error: failed to connect to server. Please try again later.'
                 );
-                report_error(init_id, 'abort reconnect');
+                // report_error(init_id, 'abort reconnect');
             }
         };
 
@@ -757,30 +772,30 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         soft_set_channel(channel);
     };
 
-    video.oncanplay = function () {
-        var play_promise = video.play();
+    // video.oncanplay = function () {
+    //     var play_promise = video.play();
 
-        if (play_promise !== undefined) {
-            play_promise.then(function () {
-                // playback started; only render UI here
-                stop_spinner();
-                hide_play_button();
-            }).catch(function (error) {
-                // playback failed
-                show_play_button();
-                add_player_error(
-                    'Error: your browser prevented muted autoplay. Please click ' +
-                    'the play button to start playback.', 'channel');
-                channel_error = true;
-                report_error(init_id, error);
-            });
-        }
-    };
+    //     if (play_promise !== undefined) {
+    //       play_promise.then(function () {
+    //         // playback started; only render UI here
+    //         stop_spinner();
+    //         hide_play_button();
+    //       }).catch(function (error) {
+    //         // playback failed
+    //         show_play_button();
+    //         add_player_error(
+    //           'Error: your browser prevented muted autoplay. Please click ' +
+    //           'the play button to start playback.', 'channel');
+    //         channel_error = true;
+    //         report_error(init_id, error);
+    //       });
+    //     }
+    //   };
 
-    video.onwaiting = function () {
-        // playback stalled; only render UI here
-        start_spinner();
-    };
+    //   video.onwaiting = function () {
+    //     // playback stalled; only render UI here
+    //     start_spinner();
+    //   };
 
     /* check if *video or audio* is rebuffering every 50 ms */
     function check_rebuffering() {
@@ -876,50 +891,55 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         if (Date.now() - last_msg_recv_ts > CONN_TIMEOUT) {
             set_fatal_error('Your connection has been closed after a timeout. ' +
                 'Please reload the page.');
-            report_error(init_id, 'connection timed out');
+            // report_error(init_id, 'connection timed out');
             ws.close();
         }
     }
     setInterval(check_conn_timeout, 1000);
 
     /* update debug info every 500 ms */
-    function update_debug_info() {
-        if (fatal_error) {
-            return;
-        }
+    // function update_debug_info() {
+    //     if (fatal_error) {
+    //         return;
+    //     }
 
-        const na = 'N/A';
-        var video_buf = document.getElementById('video-buf');
-        var video_res = document.getElementById('video-res');
-        var video_crf = document.getElementById('video-crf');
-        var video_ssim = document.getElementById('video-ssim');
-        var video_bitrate = document.getElementById('video-bitrate');
+    //     const na = 'N/A';
+    //     var video_buf = document.getElementById('video-buf');
+    //     var video_res = document.getElementById('video-res');
+    //     var video_crf = document.getElementById('video-crf');
+    //     var video_ssim = document.getElementById('video-ssim');
+    //     var video_bitrate = document.getElementById('video-bitrate');
 
-        if (av_source && av_source.isOpen()) {
-            video_buf.innerHTML = av_source.getVideoBuffer().toFixed(1);
+    //     if (av_source && av_source.isOpen()) {
+    //         video_buf.innerHTML = av_source.getVideoBuffer().toFixed(1);
 
-            var vformat_val = av_source.getVideoFormat();
-            if (vformat_val) {
-                const [vres_val, vcrf_val] = vformat_val.split('-');
-                video_res.innerHTML = vres_val;
-                video_crf.innerHTML = vcrf_val;
-            } else {
-                video_res.innerHTML = na;
-                video_crf.innerHTML = na;
-            }
+    //         var vformat_val = av_source.getVideoFormat();
+    //         if (vformat_val) {
+    //             const [vres_val, vcrf_val] = vformat_val.split('-');
+    //             video_res.innerHTML = vres_val;
+    //             video_crf.innerHTML = vcrf_val;
+    //         } else {
+    //             video_res.innerHTML = na;
+    //             video_crf.innerHTML = na;
+    //         }
 
-            const vssim_val = av_source.getSSIMdB();
-            video_ssim.innerHTML = vssim_val ? vssim_val.toFixed(2) : na;
+    //         const vssim_val = av_source.getSSIMdB();
+    //         video_ssim.innerHTML = vssim_val ? vssim_val.toFixed(2) : na;
 
-            const vbitrate_val = av_source.getVideoBitrate();
-            video_bitrate.innerHTML = vbitrate_val ? vbitrate_val.toFixed(2) : na;
-        } else {
-            video_buf.innerHTML = na;
-            video_res.innerHTML = na;
-            video_crf.innerHTML = na;
-            video_ssim.innerHTML = na;
-            video_bitrate.innerHTML = na;
-        }
-    }
-    setInterval(update_debug_info, 500);
+    //         const vbitrate_val = av_source.getVideoBitrate();
+    //         video_bitrate.innerHTML = vbitrate_val ? vbitrate_val.toFixed(2) : na;
+    //     } else {
+    //         video_buf.innerHTML = na;
+    //         video_res.innerHTML = na;
+    //         video_crf.innerHTML = na;
+    //         video_ssim.innerHTML = na;
+    //         video_bitrate.innerHTML = na;
+    //     }
+    // }
+    // setInterval(update_debug_info, 500);
+
+    /* start timer when script is loaded */
+    timerInterval = setInterval(function () {
+        timer++;
+    }, 1);
 }
