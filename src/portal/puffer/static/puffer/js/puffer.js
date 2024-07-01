@@ -5,7 +5,7 @@ const BASE_RECONNECT_BACKOFF = 250;
 const MAX_RECONNECT_BACKOFF = 10000;
 const CONN_TIMEOUT = 30000; /* close the connection after 30-second timeout */
 
-var debug = false;
+var debug = true;
 var nonsecure = false;
 var username = '';
 var port = null;
@@ -238,7 +238,7 @@ function AVSource(ws_client, server_init) {
     //   });
 
     this.isOpen = function () {
-        // modfied version: just return true if vbuf and abuf arrays are not null
+        // modfied version: just return true if vbuf and abuf are not null
         return vbuf !== null && abuf !== null;
     };
 
@@ -357,6 +357,7 @@ function AVSource(ws_client, server_init) {
     /* Get the number of seconds of buffered video */
     // modified version: drain vbuf from timer and check the length of vbuf
     this.getVideoBuffer = function () {
+        console.log('current buffer length and playback timer', vbuf, timer_vbuf);
         vbuf -= timer_vbuf;
         timer_vbuf = 0.0;
         if (vbuf > 0) {
@@ -405,7 +406,7 @@ function AVSource(ws_client, server_init) {
     /* Push data onto the SourceBuffers if they are ready */
     // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
     this.vbuf_update = function () {
-        if (pending_video_chunks.length > 0) {
+        if (vbuf != null && pending_video_chunks.length > 0) {
             var next_video = pending_video_chunks.shift();
             vbuf += next_video.data.byteLength / timescale;
             vbuf_couple.push(next_video.metadata);
@@ -413,7 +414,7 @@ function AVSource(ws_client, server_init) {
     };
 
     this.abuf_update = function () {
-        if (pending_audio_chunks.length > 0) {
+        if (abuf != null && pending_audio_chunks.length > 0) {
             var next_audio = pending_audio_chunks.shift();
             abuf += next_audio.data.byteLength / timescale;
             abuf_couple.push(next_audio.metadata);
@@ -528,8 +529,6 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
             audioBuffer: parseFloat(av_source.getAudioBuffer().toFixed(3)),
             cumRebuffer: cum_rebuffer_ms / 1000.0,
         };
-
-        console.log("client info is being sent")
 
         /* include screen sizes if they have changed */
         const screen_size = get_screen_size();
