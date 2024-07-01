@@ -353,7 +353,7 @@ function AVSource(ws_client, server_init) {
     // modified version: just check the length of vbuf
     this.getVideoBuffer = function () {
         if (vbuf.length > 0) {
-            return vbuf.reduce((acc, chunk) => acc + (chunk.metadata.totalByteLength / timescale), 0);
+            return vbuf.reduce((acc, chunk) => acc + (chunk.byteLength / timescale), 0);
         }
 
         return 0;
@@ -363,7 +363,7 @@ function AVSource(ws_client, server_init) {
     // modified version: just check the length of abuf
     this.getAudioBuffer = function () {
         if (abuf.length > 0) {
-            return abuf.reduce((acc, chunk) => acc + (chunk.metadata.totalByteLength / timescale), 0);
+            return abuf.reduce((acc, chunk) => acc + (chunk.byteLength / timescale), 0);
         }
 
         return 0;
