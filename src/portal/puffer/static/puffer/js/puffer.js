@@ -404,6 +404,8 @@ function AVSource(ws_client, server_init) {
     /* Push data onto the SourceBuffers if they are ready */
     // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
     this.vbuf_update = function () {
+        console.log('vbuf is', vbuf);
+        console.log('pending video chunks length', pending_video_chunks.length);
         if (vbuf != null && pending_video_chunks.length > 0) {
             console.log('timescale', timescale);
             var next_video = pending_video_chunks.shift();
