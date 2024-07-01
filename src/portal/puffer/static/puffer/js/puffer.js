@@ -411,7 +411,8 @@ function AVSource(ws_client, server_init) {
             var next_video = pending_video_chunks.shift();
             console.log('next video chunk', next_video);
             console.log('next video chunk byteLength', next_video.data.byteLength);
-            vbuf += next_video.data.byteLength / timescale;
+            // vbuf += next_video.data.byteLength / timescale;
+            vbuf += 2.002 + 1000;
             vbuf_couple.push(next_video.metadata);
         }
     };
@@ -419,7 +420,8 @@ function AVSource(ws_client, server_init) {
     this.abuf_update = function () {
         if (abuf != null && pending_audio_chunks.length > 0) {
             var next_audio = pending_audio_chunks.shift();
-            abuf += next_audio.data.byteLength / timescale;
+            // abuf += next_audio.data.byteLength / timescale;
+            abuf += 2.002 + 1000;
             abuf_couple.push(next_audio.metadata);
         }
     };
