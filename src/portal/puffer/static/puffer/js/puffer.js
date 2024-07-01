@@ -13,9 +13,11 @@ var csrf_token = '';
 // var video = document.getElementById('tv-video');
 
 var fatal_error = false;
-// modified version: add timer to "track" the playback time
-var timer = 0;
-var timerInterval = null;
+// modified version: add timers to drain vbuf and abuf
+var timer_vbuf = 0;
+var timer_abuf = 0;
+var timerInterval_vbuf = null;
+var timerInterval_abuf = null;
 
 function set_fatal_error(error_message) {
     if (fatal_error) {
@@ -102,7 +104,7 @@ function AVSource(ws_client, server_init) {
     var pending_audio_chunks = [];
 
     /* MediaSource and SourceBuffers */
-    // modified version: don't actually use MediaSource and SourceBuffer objects, just use arrays
+    // modified version: don't actually use MediaSource and SourceBuffer objects, just use floats and arrays
     //   var ms = null;
     var vbuf = null;
     var abuf = null;
@@ -135,12 +137,13 @@ function AVSource(ws_client, server_init) {
     // video.load();
 
     /* Initialize video and audio source buffers, and set the initial offset */
-    // modified version: just initialize buffers as empty arrays and timer using init_seek_ts
+    // modified version: just initialize buffers and timer as 0.0
     function init_source_buffers() {
         console.log('Initializing new buffers');
-        timer = init_seek_ts / timescale;
-        vbuf = [];
-        abuf = [];
+        timer_vbuf = 0.0;
+        timer_abuf = 0.0;
+        vbuf = 0.0;
+        abuf = 0.0;
         vbuf_couple = [];
         abuf_couple = [];
 
@@ -240,7 +243,7 @@ function AVSource(ws_client, server_init) {
     };
 
     /* call "close" to garbage collect MediaSource and SourceBuffers sooner */
-    // modified version: just reset buffers to empty arrays
+    // modified version: just reset buffers and timer to 0.0
     this.close = function () {
         // if (ms) {
         //     console.log('Closing media source buffer');
@@ -248,8 +251,10 @@ function AVSource(ws_client, server_init) {
 
         /* assign null to (hopefully) trigger garbage collection */
         // ms = null;
-        vbuf = null;
-        abuf = null;
+        timer_vbuf = 0.0;
+        timer_abuf = 0.0;
+        vbuf = 0.0;
+        abuf = 0.0;
 
         vbuf_couple = [];
         abuf_couple = [];
@@ -350,32 +355,36 @@ function AVSource(ws_client, server_init) {
     };
 
     /* Get the number of seconds of buffered video */
-    // modified version: just check the length of vbuf
+    // modified version: drain vbuf from timer and check the length of vbuf
     this.getVideoBuffer = function () {
-        if (vbuf.length > 0) {
-            return vbuf.reduce((acc, chunk) => acc + (chunk.byteLength / timescale), 0);
+        vbuf -= timer_vbuf;
+        timer_vbuf = 0.0;
+        if (vbuf > 0) {
+            return vbuf;
         }
-
+        vbuf = 0.0;
         return 0;
     };
 
     /* Get the number of seconds of buffered audio */
-    // modified version: just check the length of abuf
+    // modified version: drain vbuf from timer and check the length of abuf
     this.getAudioBuffer = function () {
-        if (abuf.length > 0) {
-            return abuf.reduce((acc, chunk) => acc + (chunk.byteLength / timescale), 0);
+        abuf -= timer;
+        timer_abuf = 0.0;
+        if (abuf > 0) {
+            return abuf;
         }
-
+        abuf = 0.0;
         return 0;
     };
 
     /* If buffered *video or audio* is behind video.currentTime */
-    // modified version: just check if length of vbuf and abuf is larger than timer
+    // modified version: just check if vbuf and abuf are > 0.0 + tolerance
     this.isRebuffering = function () {
         const tolerance = 0.1; // seconds
-        if (vbuf.length > 0 && abuf.length > 0) {
+        if (vbuf != null && abuf != null) {
             const min_buf = Math.min(this.getVideoBuffer(), this.getAudioBuffer());
-            if (min_buf - timer >= tolerance) {
+            if (min_buf >= tolerance) {
                 return false;
             }
         }
@@ -394,11 +403,11 @@ function AVSource(ws_client, server_init) {
     };
 
     /* Push data onto the SourceBuffers if they are ready */
-    // modified version: just push metadata to vbuf_couple and abuf_couple and discard data
+    // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
     this.vbuf_update = function () {
         if (pending_video_chunks.length > 0) {
             var next_video = pending_video_chunks.shift();
-            vbuf.push(next_video.data);
+            vbuf += next_video.data.byteLength / timescale;
             vbuf_couple.push(next_video.metadata);
         }
     };
@@ -406,7 +415,7 @@ function AVSource(ws_client, server_init) {
     this.abuf_update = function () {
         if (pending_audio_chunks.length > 0) {
             var next_audio = pending_audio_chunks.shift();
-            abuf.push(next_audio.data);
+            abuf += next_audio.data.byteLength / timescale;
             abuf_couple.push(next_audio.metadata);
         }
     };
@@ -519,6 +528,8 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
             audioBuffer: parseFloat(av_source.getAudioBuffer().toFixed(3)),
             cumRebuffer: cum_rebuffer_ms / 1000.0,
         };
+
+        console.log("client info is being sent")
 
         /* include screen sizes if they have changed */
         const screen_size = get_screen_size();
@@ -939,8 +950,12 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     // }
     // setInterval(update_debug_info, 500);
 
-    /* start timer when script is loaded */
-    timerInterval = setInterval(function () {
-        timer++;
+    /* start timers when script is loaded */
+    timerInterval_vbuf = setInterval(function () {
+        timer_vbuf++;
+    }, 1);
+
+    timerInterval_abuf = setInterval(function () {
+        timer_abuf++;
     }, 1);
 }
