@@ -358,22 +358,26 @@ function AVSource(ws_client, server_init) {
     // modified version: drain vbuf from timer and check the length of vbuf
     this.getVideoBuffer = function () {
         console.log('current buffer length and playback timer', vbuf, timer_vbuf);
-        vbuf -= timer_vbuf;
-        timer_vbuf = 0.0;
-        if (vbuf > 0) {
+        if (vbuf >= timer_vbuf) {
+            vbuf -= timer_vbuf;
+            timer_vbuf = 0.0;
             return vbuf;
         }
+        vbuf = 0.0;
+        timer_vbuf = 0.0;
         return 0;
     };
 
     /* Get the number of seconds of buffered audio */
-    // modified version: drain vbuf from timer and check the length of abuf
+    // modified version: drain abuf from timer and check the length of abuf
     this.getAudioBuffer = function () {
-        abuf -= timer_abuf;
-        timer_abuf = 0.0;
-        if (abuf > 0) {
+        if (abuf >= timer_abuf) {
+            abuf -= timer_abuf;
+            timer_abuf = 0.0;
             return abuf;
         }
+        abuf = 0.0;
+        timer_abuf = 0.0;
         return 0;
     };
 
