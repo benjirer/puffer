@@ -137,7 +137,7 @@ function AVSource(ws_client, server_init) {
     // video.load();
 
     /* Initialize video and audio source buffers, and set the initial offset */
-    // modified version: just initialize buffers and timer as 0.0
+    // modified version: just initialize buffers and timers as 0.0
     function init_source_buffers() {
         console.log('Initializing new buffers');
         timer_vbuf = 0.0;
@@ -243,7 +243,7 @@ function AVSource(ws_client, server_init) {
     };
 
     /* call "close" to garbage collect MediaSource and SourceBuffers sooner */
-    // modified version: just reset buffers and timer to 0.0
+    // modified version: just reset buffers and timers to 0.0
     this.close = function () {
         // if (ms) {
         //     console.log('Closing media source buffer');
@@ -369,7 +369,7 @@ function AVSource(ws_client, server_init) {
     /* Get the number of seconds of buffered audio */
     // modified version: drain vbuf from timer and check the length of abuf
     this.getAudioBuffer = function () {
-        abuf -= timer;
+        abuf -= timer_abuf;
         timer_abuf = 0.0;
         if (abuf > 0) {
             return abuf;
