@@ -245,8 +245,8 @@ function AVSource(ws_client, server_init) {
 
         /* assign null to (hopefully) trigger garbage collection */
         // ms = null;
-        vbuf = null;
-        abuf = null;
+        vbuf = 0.0;
+        abuf = 0.0;
 
         vbuf_couple = [];
         abuf_couple = [];
@@ -357,9 +357,9 @@ function AVSource(ws_client, server_init) {
         }
 
         // calculate buffer length
-        var current_time = Date.now()
-        var delta_t = current_time - last_check_vbuf;
-        vbuf -= delta_t / 1000;
+        var current_time_vbuf = Date.now()
+        var delta_t_vbuf = current_time_vbuf - last_check_vbuf;
+        vbuf -= delta_t_vbuf / 1000;
         last_check_vbuf = current_time;
 
         // check if buffer is negativ (ie. rebuffering)
@@ -381,9 +381,9 @@ function AVSource(ws_client, server_init) {
         }
 
         // calculate buffer length
-        var current_time = Date.now()
-        var delta_t = current_time - last_check_abuf;
-        abuf -= delta_t / 1000;
+        var current_time_abuf = Date.now()
+        var delta_t_abuf = current_time_abuf - last_check_abuf;
+        abuf -= delta_t_abuf / 1000;
         last_check_abuf = current_time;
 
         // check if buffer is negativ (ie. rebuffering)
@@ -446,10 +446,11 @@ function AVSource(ws_client, server_init) {
         // increment abuf and send ack until pending_audio_chunks is empty
         while (abuf != null && pending_audio_chunks.length > 0) {
 
-            // if it's the first chunk, initialize last_check_vbuf
+            // if it's the first chunk, initialize last_check_abuf
             if (last_check_abuf === null) {
                 last_check_abuf = Date.now();
             }
+
             var next_audio = pending_audio_chunks.shift();
             abuf += 2.002;
             abuf_couple.push(next_audio.metadata);
