@@ -359,7 +359,7 @@ function AVSource(ws_client, server_init) {
         // calculate buffer length
         var current_time = Date.now()
         var delta_t = current_time - last_check_vbuf;
-        vbuf -= delta_t;
+        vbuf -= delta_t / 1000;
         last_check_vbuf = current_time;
 
         // check if buffer is negativ (ie. rebuffering)
@@ -383,7 +383,7 @@ function AVSource(ws_client, server_init) {
         // calculate buffer length
         var current_time = Date.now()
         var delta_t = current_time - last_check_abuf;
-        abuf -= delta_t;
+        abuf -= delta_t / 1000;
         last_check_abuf = current_time;
 
         // check if buffer is negativ (ie. rebuffering)
