@@ -408,6 +408,28 @@ function AVSource(ws_client, server_init) {
         return next_audio_timestamp;
     };
 
+    /* We have to fake the SourceBuffer's updateend event */
+    // modified version: we just call this function after buf_update and perform the same action as in the EventListener
+    this.vbuf_updateend = function () {
+        if (vbuf_couple.length > 0) {
+            var data_to_ack = vbuf_couple.shift();
+            /* send the last ack here after buffer length is updated */
+            ws_client.send_client_ack('client-vidack', data_to_ack);
+        }
+
+        that.vbuf_update();
+    };
+
+    this.abuf_updateend = function () {
+        if (abuf_couple.length > 0) {
+            var data_to_ack = abuf_couple.shift();
+            /* send the last ack here after buffer length is updated */
+            ws_client.send_client_ack('client-audack', data_to_ack);
+        }
+
+        that.abuf_update();
+    };
+
     /* Push data onto the SourceBuffers if they are ready */
     // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
     this.vbuf_update = function () {
@@ -422,6 +444,9 @@ function AVSource(ws_client, server_init) {
             vbuf += 2.002 * 1000;
             vbuf_couple.push(next_video.metadata);
         }
+
+        //modified version: call vbuf_updateend after vbuf_update
+        that.vbuf_updateend();
     };
 
     this.abuf_update = function () {
@@ -431,6 +456,9 @@ function AVSource(ws_client, server_init) {
             abuf += 2.002 * 1000;
             abuf_couple.push(next_audio.metadata);
         }
+
+        //modified version: call abuf_updateend after abuf_update
+        that.abuf_updateend();
     };
 
     init_source_buffers();
