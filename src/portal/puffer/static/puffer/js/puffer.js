@@ -360,7 +360,7 @@ function AVSource(ws_client, server_init) {
         var current_time_vbuf = Date.now()
         var delta_t_vbuf = current_time_vbuf - last_check_vbuf;
         vbuf -= delta_t_vbuf / 1000;
-        last_check_vbuf = current_time;
+        last_check_vbuf = current_time_vbuf;
 
         // check if buffer is negativ (ie. rebuffering)
         if (vbuf < 0) {
@@ -384,7 +384,7 @@ function AVSource(ws_client, server_init) {
         var current_time_abuf = Date.now()
         var delta_t_abuf = current_time_abuf - last_check_abuf;
         abuf -= delta_t_abuf / 1000;
-        last_check_abuf = current_time;
+        last_check_abuf = current_time_abuf;
 
         // check if buffer is negativ (ie. rebuffering)
         if (abuf < 0) {
