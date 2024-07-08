@@ -395,7 +395,7 @@ function AVSource(ws_client, server_init) {
     /* If buffered *video or audio* is behind video.currentTime */
     // modified version: just check if vbuf and abuf are > 0.0 + tolerance
     this.isRebuffering = function () {
-        const tolerance = 0.1; // seconds
+        const tolerance = 0.1 * 1000; // ms
         if (vbuf != null && abuf != null) {
             const min_buf = Math.min(this.getVideoBuffer(), this.getAudioBuffer());
             if (min_buf >= tolerance) {
@@ -606,8 +606,8 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
 
         var msg = {
             initId: init_id,
-            videoBuffer: parseFloat(av_source.getVideoBuffer().toFixed(3)),
-            audioBuffer: parseFloat(av_source.getAudioBuffer().toFixed(3)),
+            videoBuffer: parseFloat((av_source.getVideoBuffer() / 1000).toFixed(3)),
+            audioBuffer: parseFloat((av_source.getAudioBuffer() / 1000).toFixed(3)),
             cumRebuffer: cum_rebuffer_ms / 1000.0,
         };
 
