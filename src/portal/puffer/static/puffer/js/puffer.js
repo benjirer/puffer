@@ -349,7 +349,7 @@ function AVSource(ws_client, server_init) {
     /* Get the number of seconds of buffered video */
     // modified version: drain vbuf from last_check
     this.getVideoBuffer = function () {
-        console.log('current buffer length', vbuf);
+        console.log('current v buffer length', vbuf);
 
         // check if first chunk already buffered
         if (last_check_vbuf === null) {
@@ -359,7 +359,7 @@ function AVSource(ws_client, server_init) {
         // calculate buffer length
         var current_time_vbuf = Date.now()
         var delta_t_vbuf = current_time_vbuf - last_check_vbuf;
-        vbuf -= delta_t_vbuf / 1000;
+        vbuf -= delta_t_vbuf / 1000.0;
         last_check_vbuf = current_time_vbuf;
 
         // check if buffer is negativ (ie. rebuffering)
@@ -373,7 +373,7 @@ function AVSource(ws_client, server_init) {
     /* Get the number of seconds of buffered audio */
     // modified version: drain abuf from last_check
     this.getAudioBuffer = function () {
-        console.log('current buffer length', abuf);
+        console.log('current a buffer length', abuf);
 
         // check if first chunk already buffered
         if (last_check_abuf === null) {
@@ -383,7 +383,7 @@ function AVSource(ws_client, server_init) {
         // calculate buffer length
         var current_time_abuf = Date.now()
         var delta_t_abuf = current_time_abuf - last_check_abuf;
-        abuf -= delta_t_abuf / 1000;
+        abuf -= delta_t_abuf / 1000.0;
         last_check_abuf = current_time_abuf;
 
         // check if buffer is negativ (ie. rebuffering)
