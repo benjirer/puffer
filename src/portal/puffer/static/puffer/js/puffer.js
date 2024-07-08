@@ -112,6 +112,10 @@ function AVSource(ws_client, server_init) {
     var vbuf_couple = [];
     var abuf_couple = [];
 
+    //modified version: instead of updateend, use two bools to check if vbuf and abuf are finished updating
+    var vbuf_updateend = false;
+    var abuf_updateend = false;
+
     // if (window.MediaSource) {
     //     ms = new MediaSource();
     //   } else {
@@ -146,6 +150,10 @@ function AVSource(ws_client, server_init) {
         abuf = 0.0;
         vbuf_couple = [];
         abuf_couple = [];
+
+        // set true for beginning
+        vbuf_updateend = true;
+        abuf_updateend = true;
 
         // /* https://developers.google.com/web/fundamentals/media/mse/basics */
         // URL.revokeObjectURL(video.src);
@@ -409,26 +417,28 @@ function AVSource(ws_client, server_init) {
     };
 
     /* We have to fake the SourceBuffer's updateend event */
-    // modified version: we just call this function after buf_update and perform the same action as in the EventListener
-    // this.vbuf_updateend = function () {
-    //     if (vbuf_couple.length > 0) {
-    //         var data_to_ack = vbuf_couple.shift();
-    //         /* send the last ack here after buffer length is updated */
-    //         ws_client.send_client_ack('client-vidack', data_to_ack);
-    //     }
+    // modified version: we just access the buf_updateend bools
+    this.getVbufUpdateend = function () {
+        if (vbuf_updateend) {
+            if (vbuf_couple.length > 0) {
+                var data_to_ack = vbuf_couple.shift();
+                /* send the last ack here after buffer length is updated */
+                ws_client.send_client_ack('client-vidack', data_to_ack);
+            }
+        }
+        return vbuf_updateend;
+    };
 
-    //     that.vbuf_update();
-    // };
-
-    // this.abuf_updateend = function () {
-    //     if (abuf_couple.length > 0) {
-    //         var data_to_ack = abuf_couple.shift();
-    //         /* send the last ack here after buffer length is updated */
-    //         ws_client.send_client_ack('client-audack', data_to_ack);
-    //     }
-
-    //     that.abuf_update();
-    // };
+    this.getAbufUpdateend = function () {
+        if (abuf_updateend) {
+            if (abuf_couple.length > 0) {
+                var data_to_ack = abuf_couple.shift();
+                /* send the last ack here after buffer length is updated */
+                ws_client.send_client_ack('client-audack', data_to_ack);
+            }
+        }
+        return abuf_updateend;
+    };
 
     /* Push data onto the SourceBuffers if they are ready */
     // modified version: just increment vbuf and abuf by the time of the chunk (= byteLength / timescale)
@@ -436,37 +446,22 @@ function AVSource(ws_client, server_init) {
         console.log('vbuf is', vbuf);
         console.log('pending video chunks length', pending_video_chunks.length);
         if (vbuf != null && pending_video_chunks.length > 0) {
-            console.log('timescale', timescale);
+            vbuf_updateend = false;
             var next_video = pending_video_chunks.shift();
-            console.log('next video chunk', next_video);
-            console.log('next video chunk byteLength', next_video.data.byteLength);
-            // vbuf += next_video.data.byteLength / timescale;
             vbuf += 2.002 * 1000;
             vbuf_couple.push(next_video.metadata);
         }
-
-        // modified version: send client ack here as updateend is not fired
-        if (vbuf_couple.length > 0) {
-            var data_to_ack = vbuf_couple.shift();
-            /* send the last ack here after buffer length is updated */
-            ws_client.send_client_ack('client-vidack', data_to_ack);
-        }
+        vbuf_updateend = true;
     };
 
     this.abuf_update = function () {
         if (abuf != null && pending_audio_chunks.length > 0) {
+            abuf_updateend = false;
             var next_audio = pending_audio_chunks.shift();
-            // abuf += next_audio.data.byteLength / timescale;
             abuf += 2.002 * 1000;
             abuf_couple.push(next_audio.metadata);
         }
-
-        // modified version: send client ack here as updateend is not fired
-        if (abuf_couple.length > 0) {
-            var data_to_ack = abuf_couple.shift();
-            /* send the last ack here after buffer length is updated */
-            ws_client.send_client_ack('client-audack', data_to_ack);
-        }
+        abuf_updateend = true;
     };
 
     init_source_buffers();
@@ -944,6 +939,23 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         }
     }
     setInterval(send_client_info_timer, 250);
+
+    // modified version: check updateend of vbuf and abuf periodically every 50 ms to simulate event listener
+    function check_updateend() {
+        if (fatal_error) {
+            return;
+        }
+
+        if (av_source) {
+            if (av_source.getVbufUpdateend()) {
+                av_source.vbuf_update();
+            }
+            if (av_source.getAbufUpdateend()) {
+                av_source.abuf_update();
+            }
+        }
+    }
+    setInterval(check_updateend, 50);
 
     /* check if the connection is timed out every second */
     function check_conn_timeout() {
