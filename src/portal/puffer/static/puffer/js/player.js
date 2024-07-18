@@ -164,22 +164,6 @@ function ControlBar() {
       }
     }
   };
-
-  // Audio Context Trick
-  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  var oscillator = audioCtx.createOscillator();
-  var gainNode = audioCtx.createGain();
-
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(0, audioCtx.currentTime); // Inaudible frequency
-  gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Inaudible gain
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  oscillator.start();
-
-  console.log('Audio context started to prevent throttling.');
 }
 
 function ChannelBar() {
