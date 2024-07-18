@@ -498,6 +498,10 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     /* last timestamp when received a message from server */
     var last_msg_recv_ts = null;
 
+    /* last timestamp when client-info sent */
+    var last_client_info_ts = null;
+    var client_info_threshold_passes = 0;
+
     var channel_error = false;
 
     this.send_client_init = function (channel) {
@@ -578,6 +582,13 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         // }
 
         ws.send(format_client_msg('client-info', msg));
+
+        if (last_client_info_ts !== null &&
+            Date.now() - last_client_info_ts > 1000) {
+            client_info_threshold_passes += 1;
+        }
+
+        last_client_info_ts = Date.now();
 
         if (debug) {
             console.log('sent client-info', msg);
@@ -945,6 +956,28 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         }
     }
     setInterval(check_conn_timeout, 1000);
+
+    /* close connection after 3 minutes */
+    function close_conn_timeout_thresholds() {
+        if (fatal_error) {
+            return;
+        }
+
+        if (client_info_threshold_passes > 5) {
+            set_fatal_error('Your session has been invalidated since your connection is not good enough. ' +
+                'Please try again.');
+            // report_error(init_id, 'connection timed out');
+            ws.close();
+        }
+
+        if (Date.now() - set_channel_ts > 180000) {
+            set_fatal_error('Your connection has been closed after 3 minutes. ' +
+                'Please reload the page.');
+            // report_error(init_id, 'connection timed out');
+            ws.close();
+        }
+    }
+    setInterval(close_conn_timeout_thresholds, 1000);
 
     /* update debug info every 500 ms */
     // function update_debug_info() {
