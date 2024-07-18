@@ -47,12 +47,7 @@ function parse_server_msg(data) {
 
     /* parse metadata with JSON */
     var metadata = null;
-    if (window.TextDecoder) {
-        metadata = JSON.parse(new TextDecoder().decode(raw_metadata));
-    } else {
-        /* fallback if TextDecoder is not supported on some browsers */
-        metadata = JSON.parse(String.fromCharCode.apply(null, raw_metadata));
-    }
+    metadata = JSON.parse(String.fromCharCode.apply(null, raw_metadata));
 
     return {
         metadata: metadata,
