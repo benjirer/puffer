@@ -11,10 +11,36 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.http import HttpResponse
+from functools import wraps
+from django.http import HttpResponseRedirect
+from django_ratelimit.decorators import ratelimit
 from accounts.models import InvitationToken
 from accounts.utils import random_token
 
 from .models import Rating, GrafanaSnapshot, Participate
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[-1].strip()
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
+
+
+def ip_range_limit(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+
+        ip = get_client_ip(request)
+        blocked_ip_ranges = ["138.199.6.215"]
+        if ip not in blocked_ip_ranges:
+            return function(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect("/multiple_sessions_not_allowed")
+
+    return wrap
 
 
 def index(request):
@@ -46,6 +72,8 @@ def multiple_sessions_not_allowed(request):
     return render(request, "puffer/multiple_sessions_not_allowed.html")
 
 
+@ip_range_limit
+@ratelimit(key="ip", rate="5/m", block=True)
 @login_required(login_url="/accounts/login/")
 def player(request):
     # generate a random port or use a superuser-specified port
