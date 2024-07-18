@@ -446,21 +446,23 @@ function init_player(params_json, csrf_token) {
     channel_bar.onkeydown(e);
   };
 
-  load_script('/static/puffer/js/puffer.js').onload = function () {
-    var ws_client = new WebSocketClient(
-      session_key, username, settings_debug, port, csrf_token, sysinfo);
+  /* websocket as worker */
+  var wsClientWorker = new Worker('worker.js');
+  wsClientWorker.postMessage({
+    type: 'init',
+    data: { sessionKey: session_key, username: username, settingsDebug: settings_debug, port: port, csrfToken: csrf_token, sysinfo: sysinfo }
+  });
 
-    channel_bar.on_channel_change = function (new_channel) {
-      ws_client.set_channel(new_channel);
-    };
-
-    /* configure play button's onclick event */
-    var play_button = document.getElementById('tv-play-button');
-    play_button.onclick = function () {
-      ws_client.set_channel(channel_bar.get_curr_channel());
-      play_button.style.display = 'none';
-    };
-
-    ws_client.connect(channel_bar.get_curr_channel());
+  channel_bar.on_channel_change = function (new_channel) {
+    wsClientWorker.postMessage({ type: 'set_channel', data: { channel: new_channel } });
   };
+
+  var play_button = document.getElementById('tv-play-button');
+  play_button.onclick = function () {
+    wsClientWorker.postMessage({ type: 'set_channel', data: { channel: channel_bar.get_curr_channel() } });
+    play_button.style.display = 'none';
+  };
+
+  wsClientWorker.postMessage({ type: 'connect', data: { channel: channel_bar.get_curr_channel() } });
 }
+
