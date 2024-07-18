@@ -85,6 +85,8 @@ function AVSource(ws_client, server_init) {
     const timescale = server_init.timescale;
     const video_duration = server_init.videoDuration;
     const audio_duration = server_init.audioDuration;
+    console.log('video_duration', video_duration / timescale);
+    console.log('audio_duration', audio_duration / timescale);
     const init_seek_ts = Math.max(server_init.initAudioTimestamp,
         server_init.initVideoTimestamp);
 
