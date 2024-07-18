@@ -19,10 +19,10 @@ function set_fatal_error(error_message) {
     }
 
     fatal_error = true;
-    clear_player_errors();
-    add_player_error(error_message, 'fatal');
-    stop_spinner();
-    hide_play_button();
+    // clear_player_errors();
+    // add_player_error(error_message, 'fatal');
+    // stop_spinner();
+    // hide_play_button();
 }
 
 // function report_error(init_id, error_description) {
@@ -516,9 +516,9 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
 
         init_id += 1;
 
-        const screen_size = get_screen_size();
-        screen_width = screen_size[0];
-        screen_height = screen_size[1];
+        // const screen_size = get_screen_size();
+        screen_width = 0;
+        screen_height = 0;
 
         var msg = {
             initId: init_id,
@@ -573,14 +573,14 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
             cumRebuffer: cum_rebuffer_ms / 1000.0,
         };
 
-        /* include screen sizes if they have changed */
-        const screen_size = get_screen_size();
-        if (screen_size[0] !== screen_width || screen_size[1] !== screen_height) {
-            screen_width = screen_size[0];
-            screen_height = screen_size[1];
-            msg.screenWidth = screen_width;
-            msg.screenHeight = screen_height;
-        }
+        // /* include screen sizes if they have changed */
+        // const screen_size = get_screen_size();
+        // if (screen_size[0] !== screen_width || screen_size[1] !== screen_height) {
+        //     screen_width = screen_size[0];
+        //     screen_height = screen_size[1];
+        //     msg.screenWidth = screen_width;
+        //     msg.screenHeight = screen_height;
+        // }
 
         ws.send(format_client_msg('client-info', msg));
 
@@ -681,7 +681,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
 
         if (metadata.type === 'server-error') {
             if (metadata.errorType === 'reinit') {
-                add_player_error(metadata.errorMessage, 'channel');
+                // add_player_error(metadata.errorMessage, 'channel');
                 channel_error = true;
 
                 /* send a client-init requesting the same channel (without resuming) */
@@ -690,7 +690,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
                 }
             } else if (metadata.errorType === 'unavailable') {
                 /* this channel is not currently available */
-                add_player_error(metadata.errorMessage, 'channel');
+                // add_player_error(metadata.errorMessage, 'channel');
                 channel_error = true;
             }
         } else if (metadata.type === 'server-init') {
@@ -744,7 +744,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
 
         ws.onopen = function (e) {
             console.log('Connected to', ws_addr);
-            remove_player_error('connect');
+            // remove_player_error('connect');
 
             last_msg_recv_ts = Date.now();
 
@@ -765,9 +765,9 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
                 console.log('Reconnecting in ' + reconnect_backoff + 'ms');
 
                 setTimeout(function () {
-                    add_player_error(
-                        'Error: failed to connect to server. Reconnecting...', 'connect'
-                    );
+                    // add_player_error(
+                    //     'Error: failed to connect to server. Reconnecting...', 'connect'
+                    // );
                     // report_error(init_id, 'reconnect');
 
                     if (av_source) {
@@ -796,8 +796,8 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     /* set to a channel without closing av_source; resume if possible */
     function soft_set_channel(channel) {
         /* render UI */
-        start_spinner();
-        remove_player_error('channel');
+        // start_spinner();
+        // remove_player_error('channel');
         channel_error = false;
 
         /* send client-init */
@@ -863,7 +863,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         if (startup_delay_ms === null) {
             if (!rebuffering) {
                 /* this is the first time that the channel has started playing */
-                stop_spinner();
+                // stop_spinner();
                 console.log('Channel starts playing');
 
                 /* calculate startup delay */
@@ -881,7 +881,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         if (rebuffering) {
             if (rebuffer_start_ts === null) {
                 /* channel stops playing and starts rebuffering */
-                start_spinner();
+                // start_spinner();
                 console.log('Channel starts rebuffering');
 
                 /* inform server */
@@ -901,7 +901,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         } else {
             if (rebuffer_start_ts !== null) {
                 /* the channel resumes playing from rebuffering */
-                stop_spinner();
+                // stop_spinner();
                 console.log('Channel resumes playing');
 
                 /* inform server */
