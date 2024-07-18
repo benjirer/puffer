@@ -447,7 +447,7 @@ function init_player(params_json, csrf_token) {
   };
 
   /* websocket as worker */
-  var wsClientWorker = new Worker('worker.js');
+  var wsClientWorker = new Worker('/static/puffer/js/worker.js');
   wsClientWorker.postMessage({
     type: 'init',
     data: { sessionKey: session_key, username: username, settingsDebug: settings_debug, port: port, csrfToken: csrf_token, sysinfo: sysinfo }
