@@ -431,6 +431,7 @@ function AVSource(ws_client, server_init) {
             }
 
             var next_video = pending_video_chunks.shift();
+            console.log('video duration', video_duration);
             vbuf += 2.002;
             vbuf_couple.push(next_video.metadata);
             if (vbuf_couple.length > 0) {
@@ -452,6 +453,7 @@ function AVSource(ws_client, server_init) {
             }
 
             var next_audio = pending_audio_chunks.shift();
+            console.log('audio duration', audio_duration);
             abuf += 2.002;
             abuf_couple.push(next_audio.metadata);
             if (abuf_couple.length > 0) {
