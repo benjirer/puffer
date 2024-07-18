@@ -431,7 +431,7 @@ function AVSource(ws_client, server_init) {
             }
 
             var next_video = pending_video_chunks.shift();
-            vbuf += 2.002;
+            vbuf += video_duration / timescale;
             vbuf_couple.push(next_video.metadata);
             if (vbuf_couple.length > 0) {
                 var data_to_ack = vbuf_couple.shift();
@@ -452,7 +452,7 @@ function AVSource(ws_client, server_init) {
             }
 
             var next_audio = pending_audio_chunks.shift();
-            abuf += 2.002;
+            abuf += audio_duration / timescale;
             abuf_couple.push(next_audio.metadata);
             if (abuf_couple.length > 0) {
                 var data_to_ack = abuf_couple.shift();
