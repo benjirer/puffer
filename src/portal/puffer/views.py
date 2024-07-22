@@ -36,7 +36,9 @@ def load_blocked_ips(file_path):
     return [ipaddress.ip_network(prefix) for prefix in data["ip_prefixes"]]
 
 
-blocked_ip_ranges = load_blocked_ips("consolidated_ip_prefixes.json")
+blocked_ip_ranges = load_blocked_ips(
+    "/local/home/bhoffman/puffer/src/portal/puffer/ip_prefixes.json"
+)
 
 
 def ip_in_blocked_ranges(ip, ranges):
