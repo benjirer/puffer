@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import ipaddress
 from datetime import datetime
 from influxdb import InfluxDBClient
 
@@ -23,22 +24,37 @@ from .models import Rating, GrafanaSnapshot, Participate
 def get_client_ip(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[-1].strip()
+        ip = x_forwarded_for.split(",")[0]
     else:
         ip = request.META.get("REMOTE_ADDR")
     return ip
 
 
+def load_blocked_ips(file_path):
+    with open(file_path, "r") as file:
+        data = json.load(file)
+    return [ipaddress.ip_network(prefix) for prefix in data["ip_prefixes"]]
+
+
+blocked_ip_ranges = load_blocked_ips("consolidated_ip_prefixes.json")
+
+
+def ip_in_blocked_ranges(ip, ranges):
+    ip = ipaddress.ip_address(ip)
+    for network in ranges:
+        if ip in network:
+            return True
+    return False
+
+
 def ip_range_limit(function):
     @wraps(function)
     def wrap(request, *args, **kwargs):
-
-        ip = get_client_ip(request)
-        blocked_ip_ranges = ["138.199.6.215"]
-        if ip not in blocked_ip_ranges:
-            return function(request, *args, **kwargs)
+        client_ip = get_client_ip(request)
+        if ip_in_blocked_ranges(client_ip, blocked_ip_ranges):
+            return HttpResponseRedirect("/connection_not_allowed")
         else:
-            return HttpResponseRedirect("/multiple_sessions_not_allowed")
+            return function(request, *args, **kwargs)
 
     return wrap
 
@@ -70,6 +86,10 @@ def results(request, input_date=""):
 
 def multiple_sessions_not_allowed(request):
     return render(request, "puffer/multiple_sessions_not_allowed.html")
+
+
+def connection_not_allowed(request):
+    return render(request, "puffer/connection_not_allowed.html")
 
 
 @ip_range_limit

@@ -29,4 +29,9 @@ urlpatterns = [
         views.multiple_sessions_not_allowed,
         name="multiple_sessions_not_allowed",
     ),
+    path(
+        "connection_not_allowed/",
+        views.connection_not_allowed,
+        name="connection_not_allowed",
+    ),
 ]

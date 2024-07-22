@@ -453,6 +453,13 @@ function init_player(params_json, csrf_token) {
     data: { sessionKey: session_key, username: username, settingsDebug: settings_debug, port: port, csrfToken: csrf_token, sysinfo: sysinfo }
   });
 
+  wsClientWorker.onmessage = function (event) {
+    var data = event.data;
+    if (data.type === 'notification') {
+      alert(data.message);
+    }
+  };
+
   channel_bar.on_channel_change = function (new_channel) {
     wsClientWorker.postMessage({ type: 'set_channel', data: { channel: new_channel } });
   };

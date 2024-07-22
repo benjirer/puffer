@@ -957,22 +957,28 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     }
     setInterval(check_conn_timeout, 1000);
 
-    /* close connection after 3 minutes */
+    /* close connection after 3 minutes or if threshold for time between client-info messages is passed too many times */
     function close_conn_timeout_thresholds() {
         if (fatal_error) {
             return;
         }
 
         if (client_info_threshold_passes > 5) {
-            set_fatal_error('Your session has been invalidated since your connection is not good enough. ' +
-                'Please try again.');
+            set_fatal_error('Your session has been invalidated since your connection is not good enough. Please try again.');
+            postMessage({
+                type: 'notification',
+                message: 'Your session has been invalidated since your connection is not good enough. Please try again.'
+            });
             // report_error(init_id, 'connection timed out');
             ws.close();
         }
 
         if (Date.now() - set_channel_ts > 180000) {
-            set_fatal_error('Your connection has been closed after 3 minutes. ' +
-                'Please reload the page.');
+            set_fatal_error('Your connection has been closed after 3 minutes. Please reload the page.');
+            postMessage({
+                type: 'notification',
+                message: 'Your connection has been closed after 3 minutes. Please reload the page.'
+            });
             // report_error(init_id, 'connection timed out');
             ws.close();
         }
