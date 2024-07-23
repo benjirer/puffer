@@ -92,8 +92,8 @@ def connection_not_allowed(request):
     return render(request, "puffer/connection_not_allowed.html")
 
 
-# @ip_range_limit
-# @ratelimit(key="ip", rate="5/m", block=True)
+@ip_range_limit
+@ratelimit(key="ip", rate="5/m", block=True)
 @login_required(login_url="/accounts/login/")
 def player(request):
     # generate a random port or use a superuser-specified port
