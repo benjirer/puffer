@@ -22,6 +22,12 @@ from django_ratelimit.exceptions import Ratelimited
 from .models import Rating, GrafanaSnapshot, Participate
 
 
+def handler403(request, exception=None):
+    if isinstance(exception, Ratelimited):
+        return HttpResponseRedirect("/rate_limit_handler")
+    return HttpResponse("Gugu")
+
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
@@ -58,12 +64,6 @@ def ip_range_limit(function):
             return function(request, *args, **kwargs)
 
     return wrap
-
-
-def handler403(request, exception=None):
-    if isinstance(exception, Ratelimited):
-        return HttpResponseRedirect("/rate_limit_handler")
-    return HttpResponse("Gugu")
 
 
 def index(request):
@@ -104,9 +104,11 @@ def rate_limit_handler(request):
 
 
 @ip_range_limit
-@ratelimit(key="ip", rate="1/h", block=True)
+@ratelimit(key="ip", rate="1/h", block=False)
 @login_required(login_url="/accounts/login/")
 def player(request):
+    if getattr(request, "limited", False):
+        return HttpResponseRedirect("/rate_limit_handler")
     # generate a random port or use a superuser-specified port
     port = None
     if request.user.is_superuser:
