@@ -56,7 +56,7 @@ def player(request):
     if port is None:
         total_servers = settings.TOTAL_SERVERS
         base_port = settings.WS_BASE_PORT
-        port = str(base_port + 1)
+        port = str(base_port + random.randint(1, total_servers))
 
     # parameters passed to Javascript stored in JSON
     params = {
