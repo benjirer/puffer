@@ -62,8 +62,8 @@ def ip_range_limit(function):
 
 def handler403(request, exception=None):
     if isinstance(exception, Ratelimited):
-        return render(request, "puffer/rate_limit_handler.html", status=403)
-    return HttpResponse("Forbidden")
+        return HttpResponseRedirect("/rate_limit_handler")
+    return HttpResponse("Gugu")
 
 
 def index(request):
@@ -97,6 +97,10 @@ def multiple_sessions_not_allowed(request):
 
 def connection_not_allowed(request):
     return render(request, "puffer/connection_not_allowed.html")
+
+
+def rate_limit_handler(request):
+    return render(request, "puffer/rate_limit_handler.html")
 
 
 @ip_range_limit

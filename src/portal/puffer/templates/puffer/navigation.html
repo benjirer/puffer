@@ -62,13 +62,13 @@
 
     function updateMessage() {
       if (countdown > 0) {
-        document.getElementById('session-message').innerText = "Dear user, please keep this tab open for the next " + countdown + " seconds. Afterwards, your test code will apper.";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>Dear user, please keep this tab open for the next " + countdown + " seconds. Afterwards, your test code will appear.</h2>";
         countdown--;
       } else {
         clearInterval(interval);
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerText = "The test has now run long enough, thank you! Your test code is {{ user.username }}. Please enter this code into the provided form. You may now close this tab. Note that the data collection will continue for 2:30 minutes should you keep this tab open.";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has now run long enough, thank you! Your test code is {{ user.username }}. Please enter this code into the provided form. You may now close this tab. <br> Note that the data collection will continue for 2:30 minutes should you keep this tab open.</h2>";
       }
     }
 

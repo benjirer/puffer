@@ -1,6 +1,7 @@
 from django.urls import path, re_path
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
+from django.conf.urls import handler404, handler500, handler403
 from . import views
 
 handler403 = views.handler403
@@ -36,4 +37,5 @@ urlpatterns = [
         views.connection_not_allowed,
         name="connection_not_allowed",
     ),
+    path("rate_limit_handler/", views.rate_limit_handler, name="rate_limit_handler"),
 ]
