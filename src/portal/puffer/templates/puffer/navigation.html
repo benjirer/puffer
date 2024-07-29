@@ -48,7 +48,10 @@
   </div>
 </nav>
 
-<div id="session-message">Your session code will appear in 30 seconds.</div>
+<div id="session-message">
+  <h2 style="text-align: center;">Dear user, please keep this tab open for the next 30 seconds. Afterwards, your test
+    code will apper.</h2>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -59,13 +62,13 @@
 
     function updateMessage() {
       if (countdown > 0) {
-        document.getElementById('session-message').innerText = "Your session code will appear in " + countdown + " seconds.";
+        document.getElementById('session-message').innerText = "Dear user, please keep this tab open for the next " + countdown + " seconds. Afterwards, your test code will apper.";
         countdown--;
       } else {
         clearInterval(interval);
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerText = "Your session code is {{ user.username }}. Please enter this code into the provided form and then close this window.";
+        document.getElementById('session-message').innerText = "The test has now run long enough, thank you! Your test code is {{ user.username }}. Please enter this code into the provided form. You may now close this tab. Note that the data collection will continue for 2:30 minutes should you keep this tab open.";
       }
     }
 
@@ -76,22 +79,6 @@
     function stopTimer() {
       clearInterval(interval);
     }
-
-    // Update awayTime when the page is hidden
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        stopTimer();
-        awayTime = Date.now(); // Record the time when the page becomes hidden
-      } else if (!isPaused) {
-        var awayDuration = (Date.now() - awayTime) / 1000; // Calculate duration away from page in seconds
-        if (awayDuration > 10) {
-          document.getElementById('session-message').innerText = "Unfortunately, we require that you have this tab open during the experiment. As you have been away from this page for over 10 seconds, this attempt cannot be counted. Please try again.";
-        } else {
-          countdown -= awayDuration; // Adjust countdown by the time spent away
-          startTimer();
-        }
-      }
-    });
 
     startTimer();
   });

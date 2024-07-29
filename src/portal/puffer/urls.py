@@ -3,6 +3,8 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
 from . import views
 
+handler403 = views.handler403
+
 urlpatterns = [
     path("", views.index, name="index"),
     path(

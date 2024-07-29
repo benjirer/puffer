@@ -17,7 +17,8 @@ from django.http import HttpResponseRedirect
 from django_ratelimit.decorators import ratelimit
 from accounts.models import InvitationToken
 from accounts.utils import random_token
-
+from django.shortcuts import render
+from django_ratelimit.exceptions import Ratelimited
 from .models import Rating, GrafanaSnapshot, Participate
 
 
@@ -33,10 +34,10 @@ def get_client_ip(request):
 def load_blocked_ips(file_path):
     with open(file_path, "r") as file:
         data = json.load(file)
-    return [ipaddress.ip_network(prefix) for prefix in data["ip_prefixes"]]
+    return [ipaddress.ip_network(prefix) for prefix in data["blocked_ip_prefixes"]]
 
 
-blocked_ip_ranges = load_blocked_ips("/app/src/portal/puffer/ip_prefixes.json")
+blocked_ip_ranges = load_blocked_ips("/app/src/portal/puffer/blocked_ip_prefixes.json")
 
 
 def ip_in_blocked_ranges(ip, ranges):
@@ -57,6 +58,12 @@ def ip_range_limit(function):
             return function(request, *args, **kwargs)
 
     return wrap
+
+
+def handler403(request, exception=None):
+    if isinstance(exception, Ratelimited):
+        return render(request, "puffer/rate_limit_handler.html", status=403)
+    return HttpResponse("Forbidden")
 
 
 def index(request):
@@ -93,7 +100,7 @@ def connection_not_allowed(request):
 
 
 @ip_range_limit
-@ratelimit(key="ip", rate="5/m", block=True)
+@ratelimit(key="ip", rate="1/h", block=True)
 @login_required(login_url="/accounts/login/")
 def player(request):
     # generate a random port or use a superuser-specified port
