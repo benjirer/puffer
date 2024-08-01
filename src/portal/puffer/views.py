@@ -103,8 +103,8 @@ def rate_limit_handler(request):
     return render(request, "puffer/rate_limit_handler.html")
 
 
-@ip_range_limit
-@ratelimit(key="ip", rate="1/h", block=False)
+# @ip_range_limit
+# @ratelimit(key="ip", rate="1/h", block=False)
 @login_required(login_url="/accounts/login/")
 def player(request):
     if getattr(request, "limited", False):
