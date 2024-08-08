@@ -71,7 +71,8 @@
         document.getElementById('session-message').innerHTML = `
           <h2 style='text-align: center;'>
             Your test code is: <br><br>
-            <span id="username" style="cursor: pointer;">{{ user.username }}</span>
+            <span id="usernamefield" style="cursor: pointer;">{{ user.username }}</span><br>
+            <button onclick="myFunction()">Copy code</button><br><br>
             <br><br>
             Please enter this code into the amazon form. <br>
             The data collection will continue for 2:30 minutes unless you close this tab.
@@ -90,16 +91,13 @@
     startTimer();
   });
 
-  function attachCopyEvent() {
-    const usernameElem = document.getElementById('username');
-    if (usernameElem) {
-      usernameElem.addEventListener('click', function () {
-        navigator.clipboard.writeText(this.textContent).then(() => {
-          alert('Username copied to clipboard!');
-        }).catch(err => {
-          console.error('Failed to copy: ', err);
-        });
-      });
-    }
+  function myFunction() {
+    var copyText = document.getElementById("usernamefield");
+
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+
+    navigator.clipboard.writeText(copyText.value);
+    alert("Copied code to clipboard");
   }
 </script>
