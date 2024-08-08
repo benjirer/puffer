@@ -61,7 +61,7 @@
 
     function updateMessage() {
       if (countdown > 0) {
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. Your confirmation code will appear in: <br><br> " + countdown + " seconds";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. <br> Your confirmation code will appear in: <br><br> " + countdown + " seconds";
         countdown--;
       } else {
         clearInterval(interval);
@@ -70,7 +70,7 @@
         document.getElementById('session-message').innerHTML = `
           <h2 style='text-align: center;'>
             Your test code is: <br><br>
-            <span id="username" style="cursor: pointer;" onclick="copyToClipboard()">{{ user.username }}</span>
+            <span id="username" style="cursor: pointer;">{{ user.username }}</span>
             <br><br>
             Please enter this code into the amazon form. <br>
             The data collection will continue for 2:30 minutes unless you close this tab.
@@ -89,12 +89,16 @@
     startTimer();
   });
 
-  function copyToClipboard() {
-    const username = document.getElementById('username').textContent;
-    navigator.clipboard.writeText(username).then(() => {
-      alert('Username copied to clipboard!');
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
+  function attachCopyEvent() {
+    const usernameElem = document.getElementById('username');
+    if (usernameElem) {
+      usernameElem.addEventListener('click', function () {
+        navigator.clipboard.writeText(this.textContent).then(() => {
+          alert('Username copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+      });
+    }
   }
 </script>
