@@ -39,7 +39,7 @@
       <a role="button" class="btn btn-link" href="{% url 'logout' %}" style="display: none;">Sign out</a>
       <!-- dear "hacker": note that even if you display the username prior to the timer ending, your session will be  
        invalidated and you will not receive payment, as you have not reached the time requirement -->
-      <span id="user-name" style="vertical-align:middle; display:none;">{{ user.username }}</span>
+      <!-- <span id="user-name" style="vertical-align:middle; display:none;">{{ user.username }}</span> -->
       {% else %}
       <a role="button" class="btn btn-primary" href="{% url 'signup' %}">Sign up</a>
       <a role="button" class="btn btn-outline-primary" href="{% url 'player' %}">Log in</a>
@@ -92,7 +92,7 @@
   });
 
   function myFunction() {
-    var copyText = document.getElementById("usernamefield");
+    var copyText = user.username;
 
     copyText.select();
     copyText.setSelectionRange(0, 99999);
