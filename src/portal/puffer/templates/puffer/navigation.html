@@ -49,8 +49,7 @@
 </nav>
 
 <div id="session-message">
-  <h2 style="text-align: center;">Dear user, please keep this tab open for the next 30 seconds. Afterwards, your test
-    code will apper.</h2>
+  <h2 style="text-align: center;">The test has started. Your confirmation code will appear in: <br><br> 30 seconds</h2>
 </div>
 
 <script>
@@ -62,13 +61,20 @@
 
     function updateMessage() {
       if (countdown > 0) {
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>Dear user, please keep this tab open for the next " + countdown + " seconds. Afterwards, your test code will appear.</h2>";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. Your confirmation code will appear in: <br><br> " + countdown + " seconds";
         countdown--;
       } else {
         clearInterval(interval);
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has now run long enough, thank you! Your test code is: <br> {{ user.username }} <br> Please enter this code into the provided form. You may now close this tab. <br> Note that the data collection will continue for 2:30 minutes should you keep this tab open.</h2>";
+        document.getElementById('session-message').innerHTML = `
+          <h2 style='text-align: center;'>
+            Your test code is: <br><br>
+            <span id="username" style="cursor: pointer;" onclick="copyToClipboard()">{{ user.username }}</span>
+            <br><br>
+            Please enter this code into the amazon form. <br>
+            The data collection will continue for 2:30 minutes unless you close this tab.
+          </h2>`;
       }
     }
 
@@ -82,4 +88,13 @@
 
     startTimer();
   });
+
+  function copyToClipboard() {
+    const username = document.getElementById('username').textContent;
+    navigator.clipboard.writeText(username).then(() => {
+      alert('Username copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  }
 </script>

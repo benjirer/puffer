@@ -964,20 +964,20 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         }
 
         if (client_info_threshold_passes > 5) {
-            set_fatal_error('Your computer is performing slower that expected, please keep this tab open and close your other tabs and applications.');
+            set_fatal_error('Your connection is slow, please keep this tab open and close your other tabs and applications.');
             postMessage({
                 type: 'notification',
-                message: 'Your computer is performing slower that expected, please keep this tab open and close your other tabs and applications.'
+                message: 'Your connection is slow, please keep this tab open and close your other tabs and applications.'
             });
             // report_error(init_id, 'connection timed out');
             ws.close();
         }
 
         if (Date.now() - set_channel_ts > 180000) {
-            set_fatal_error('Thank you for completing the test! Your connection has now been closed and no more data is being collected, please close this tab.');
+            set_fatal_error('Your connection has now been closed, please close this tab.');
             postMessage({
                 type: 'notification',
-                message: 'Thank you for completing the test! Your connection has now been closed and no more data is being collected, please close this tab.'
+                message: 'Your connection has now been closed, please close this tab.'
             });
             // report_error(init_id, 'connection timed out');
             ws.close();

@@ -76,3 +76,16 @@
   width: 100%;
   max-width: 800px;
 }
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+h2 {
+  text-align: center;
+  width: 90%;
+}
