@@ -89,15 +89,17 @@
     }
 
     startTimer();
+
+    function myFunction() {
+      var copyText = user.username;
+
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+
+      navigator.clipboard.writeText(copyText.value);
+      alert("Copied code to clipboard");
+    }
   });
 
-  function myFunction() {
-    var copyText = user.username;
 
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-
-    navigator.clipboard.writeText(copyText.value);
-    alert("Copied code to clipboard");
-  }
 </script>
