@@ -974,11 +974,6 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         }
 
         if (Date.now() - set_channel_ts > 180000) {
-            set_fatal_error('Your connection has now been closed, please close this tab.');
-            postMessage({
-                type: 'notification',
-                message: 'Your connection has now been closed, please close this tab.'
-            });
             // report_error(init_id, 'connection timed out');
             ws.close();
         }

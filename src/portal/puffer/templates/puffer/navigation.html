@@ -66,7 +66,7 @@
       } else if (countdown <= 180) {
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Your test code is: <br><br><span id='usernamefield' style='cursor: pointer;''>{{ user.username }}</span><br><br>Use this code to confirm your participation. <br>Additional data collection will continue for <br> " + (180 - countdown) + " seconds. <br> You may close this tab at any time.</h2>";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Your test code is: <br><br><span id='usernamefield' style='cursor: pointer;''>{{ user.username }}</span><br><br>Use this code to confirm your participation. <br>Additional data collection will continue for: <br><br> " + (180 - countdown) + " seconds <br><br> You may close this tab at any time.</h2>";
         countdown++;
       } else {
         clearInterval(interval);
