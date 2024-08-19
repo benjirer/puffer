@@ -61,13 +61,13 @@
 
     function updateMessage() {
       if (countdown <= 30) {
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. <br> Your confirmation code will appear in: <br><br> " + 30 - countdown + " seconds";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. <br> Your confirmation code will appear in: <br><br> " + (30 - countdown) + " seconds";
         countdown++;
       } else if (countdown <= 180) {
         clearInterval(interval);
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Your test code is: <br><br><span id='usernamefield' style='cursor: pointer;''>{{ user.username }}</span><br><button onclick='myFunction()''>Copy code</button><br><br><br><br>Use this code to confirm your participation. <br>Additional data collection will continue for <br> " + 180 - countdown + "seconds \n You may close this tab at any time.</h2>";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Your test code is: <br><br><span id='usernamefield' style='cursor: pointer;''>{{ user.username }}</span><br><button onclick='myFunction()''>Copy code</button><br><br><br><br>Use this code to confirm your participation. <br>Additional data collection will continue for <br> " + (180 - countdown) + "seconds \n You may close this tab at any time.</h2>";
         countdown++;
       } else {
         clearInterval(interval);
