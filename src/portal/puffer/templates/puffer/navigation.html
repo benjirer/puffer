@@ -80,8 +80,8 @@
         countdown++;
       } else {
         clearInterval(interval);
-        document.getElementById('session-message-f').innerHTML = "<h2 style='text-align: center;'>Your confirmation code is:<br><br><span id='usernamefield'>{{ user.username }}</span><br><br></h2>";
-        document.getElementById('session-message-s').innerHTML = "<h2 style='text-align: center><Additional data collection has completed. Thank you!<br>You may close this tab at any time</h2>";
+        document.getElementById('session-message-f').innerHTML = "<h2 style='text-align: center;'>Your confirmation code is:<br><br><span id='usernamefield'>{{ user.username }}</span><br><br><Additional data collection has completed. Thank you!<br>You may close this tab at any time</h2>";
+        document.getElementById('session-message-s').innerHTML = "";
       }
     }
 
