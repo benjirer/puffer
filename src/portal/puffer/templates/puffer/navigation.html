@@ -48,8 +48,12 @@
   </div>
 </nav>
 
+<div id="session-id-c">
+</div>
+
 <div id="session-message">
-  <h2 style="text-align: center;">The test has started. <br> Your confirmation code will appear in: <br><br> 30 seconds
+  <h2 style="text-align: center;">The test has started and is running in the background. Do not close this tab.<br>Your
+    confirmation code will appear in:<br><br>30 seconds
   </h2>
 </div>
 
@@ -58,19 +62,24 @@
     var countdown = 0;
     var interval;
     var isPaused = false;
+    var alreadySet = false;
 
     function updateMessage() {
       if (countdown <= 30) {
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started. <br> Your confirmation code will appear in: <br><br> " + (30 - countdown) + " seconds";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>The test has started and is running in the background. Do not close this tab.<br>Your confirmation code will appear in:<br><br>" + (30 - countdown) + " seconds";
         countdown++;
       } else if (countdown <= 180) {
+        if (!alreadySet) {
+          document.getElementById('session-id-c').innerHTML = "<h2 style='text-align: center;'>Your confirmation code is:<br><br><span id='usernamefield'>{{ user.username }}</span><br><br>";
+          alreadySet = true;
+        }
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
         // invalidated and you will not receive payment, as you have not reached the time requirement
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Your test code is: <br><br><span id='usernamefield' style='cursor: pointer;''>{{ user.username }}</span><br><br>Use this code to confirm your participation. <br>Additional data collection will continue for: <br><br> " + (180 - countdown) + " seconds <br><br> You may close this tab at any time.</h2>";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'>Additional data collection will continue for:<br><br>" + (180 - countdown) + " seconds<br><br>You may close this tab at any time.</h2>";
         countdown++;
       } else {
         clearInterval(interval);
-        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center;'> Additional data collection has completed. <br> You may close this tab at any time</h2>";
+        document.getElementById('session-message').innerHTML = "<h2 style='text-align: center><Additional data collection has completed. Thank you!<br>You may close this tab at any time</h2>";
       }
     }
 
