@@ -48,10 +48,10 @@
   </div>
 </nav>
 
-<div id="session-id-c">
+<div id="session-id-c" style="display: block; width: 100%; clear: both;">
 </div>
 
-<div id="session-message">
+<div id="session-message" style="display: block; width: 100%; clear: both;">
   <h2 style="text-align: center;">The test has started and is running in the background. Do not close this tab.<br>Your
     confirmation code will appear in:<br><br>30 seconds
   </h2>
@@ -70,7 +70,7 @@
         countdown++;
       } else if (countdown <= 180) {
         if (!alreadySet) {
-          document.getElementById('session-id-c').innerHTML = "<h2 style='text-align: center;'>Your confirmation code is:<br><br><span id='usernamefield'>{{ user.username }}</span><br><br>";
+          document.getElementById('session-id-c').innerHTML = "<h2 style='text-align: center;'>Your confirmation code is:<br><br><span id='usernamefield'>{{ user.username }}</span><br><br></h2>";
           alreadySet = true;
         }
         // dear "hacker": note that even if you display the username prior to the timer ending, your session will be 
