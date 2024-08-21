@@ -963,15 +963,15 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
             return;
         }
 
-        if (client_info_threshold_passes > 5) {
-            set_fatal_error('Your connection is slow, please keep this tab open and close your other tabs and applications.');
-            postMessage({
-                type: 'notification',
-                message: 'Your connection is slow, please keep this tab open and close your other tabs and applications.'
-            });
-            // report_error(init_id, 'connection timed out');
-            ws.close();
-        }
+        // if (client_info_threshold_passes > 5) {
+        //     set_fatal_error('Your connection is slow, please keep this tab open and close your other tabs and applications.');
+        //     postMessage({
+        //         type: 'notification',
+        //         message: 'Your connection is slow, please keep this tab open and close your other tabs and applications.'
+        //     });
+        //     // report_error(init_id, 'connection timed out');
+        //     ws.close();
+        // }
 
         if (Date.now() - set_channel_ts > 180000) {
             // report_error(init_id, 'connection timed out');
