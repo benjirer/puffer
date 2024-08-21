@@ -766,31 +766,31 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
                 return;
             }
 
-            if (reconnect_backoff < MAX_RECONNECT_BACKOFF) {
-                /* Try to reconnect */
-                console.log('Reconnecting in ' + reconnect_backoff + 'ms');
+            // if (reconnect_backoff < MAX_RECONNECT_BACKOFF) {
+            //     /* Try to reconnect */
+            //     console.log('Reconnecting in ' + reconnect_backoff + 'ms');
 
-                setTimeout(function () {
-                    // add_player_error(
-                    //     'Error: failed to connect to server. Reconnecting...', 'connect'
-                    // );
-                    // report_error(init_id, 'reconnect');
+            //     setTimeout(function () {
+            //         // add_player_error(
+            //         //     'Error: failed to connect to server. Reconnecting...', 'connect'
+            //         // );
+            //         // report_error(init_id, 'reconnect');
 
-                    if (av_source) {
-                        /* Try to resume the connection */
-                        that.connect(av_source.getChannel());
-                    } else {
-                        that.connect(channel);
-                    }
-                }, reconnect_backoff);
+            //         if (av_source) {
+            //             /* Try to resume the connection */
+            //             that.connect(av_source.getChannel());
+            //         } else {
+            //             that.connect(channel);
+            //         }
+            //     }, reconnect_backoff);
 
-                reconnect_backoff = reconnect_backoff * 2;
-            } else {
-                set_fatal_error(
-                    'Error: failed to connect to server. Please try again later.'
-                );
-                // report_error(init_id, 'abort reconnect');
-            }
+            //     reconnect_backoff = reconnect_backoff * 2;
+            // } else {
+            //     set_fatal_error(
+            //         'Error: failed to connect to server. Please try again later.'
+            //     );
+            //     // report_error(init_id, 'abort reconnect');
+            // }
         };
 
         ws.onerror = function (e) {
