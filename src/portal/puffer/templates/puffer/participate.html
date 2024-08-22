@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="{% static 'puffer/dist/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'puffer/css/common.css' %}">
-  <title>Puffer</title>
+  <title>Internet Test</title>
   <link rel="icon" href="{% static 'puffer/dist/images/favicon.ico' %}">
 </head>
 
@@ -21,7 +21,7 @@
     <!-- Success or error messages -->
     {% if messages %}
     <ul class="list-unstyled">
-    {% for msg in messages %}
+      {% for msg in messages %}
       <li>
         <div class="alert alert-{{msg.level_tag}}" role="alert">
           {{msg.message}}
@@ -30,7 +30,7 @@
           </button>
         </div>
       </li>
-    {% endfor %}
+      {% endfor %}
     </ul>
     {% endif %}
 
@@ -52,15 +52,17 @@
       We will never share your email with anyone else.
     </p>
 
-    <p><form class="form-inline" method="post" action="{% url 'participate' %}">
+    <p>
+    <form class="form-inline" method="post" action="{% url 'participate' %}">
       {% csrf_token %}
 
       <div class="form-group">
         <input type="text" class="form-control mr-3" name="email-field" id="email-field"
-               placeholder="Please enter your email" style="width:300px" required></input>
+          placeholder="Please enter your email" style="width:300px" required></input>
       </div>
       <button type="submit" class="btn btn-primary">Request a token</button>
-    </form></p>
+    </form>
+    </p>
 
     <p>Already have an invitation token? <a href="{% url 'signup' %}">Sign up here.</a></p>
   </div>

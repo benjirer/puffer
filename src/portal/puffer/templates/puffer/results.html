@@ -11,7 +11,7 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BVWDMK20ZJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     gtag('config', 'G-BVWDMK20ZJ');
@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="{% static 'puffer/dist/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'puffer/css/common.css' %}">
   <link rel="stylesheet" href="{% static 'puffer/dist/css/bootstrap-datepicker.standalone.min.css' %}">
-  <title>Puffer</title>
+  <title>Internet Test</title>
   <link rel="icon" href="{% static 'puffer/dist/images/favicon.ico' %}">
 </head>
 
@@ -43,39 +43,54 @@
       <div class="col pt-2">
         <ul>
           <li>Selected date (UTC): <span id="selected-date"></span>
-              (<a id="permalink">share a permalink</a>)</li>
+            (<a id="permalink">share a permalink</a>)</li>
           <li>Full results: <a id="bucket"></a></li>
           <li>Retrained model: <a id="model"></a></li>
           <li><span class="monospace">video_sent</span> measurement:
-              <a id="video_sent"></a></li>
+            <a id="video_sent"></a>
+          </li>
           <li><span class="monospace">video_acked</span> measurement:
-              <a id="video_acked"></a></li>
+            <a id="video_acked"></a>
+          </li>
           <li><span class="monospace">client_buffer</span> measurement:
-              <a id="client_buffer"></a></li>
+            <a id="client_buffer"></a>
+          </li>
           <li><span class="monospace">video_size</span> measurement:
-              <a id="video_size"></a></li>
+            <a id="video_size"></a>
+          </li>
           <li><span class="monospace">ssim</span> measurement:
-              <a id="ssim"></a></li>
+            <a id="ssim"></a>
+          </li>
           <li>Current experiment, past day, all streams:<br>
-              <img class="img-fluid perf-img" id="day_all_plot"></li>
+            <img class="img-fluid perf-img" id="day_all_plot">
+          </li>
           <li>Current experiment, past day, slow streams only:<br>
-              <img class="img-fluid perf-img" id="day_slow_plot"></li>
+            <img class="img-fluid perf-img" id="day_slow_plot">
+          </li>
           <li>Current experiment, past week, all streams:<br>
-              <img class="img-fluid perf-img" id="week_all_plot"></li>
+            <img class="img-fluid perf-img" id="week_all_plot">
+          </li>
           <li>Current experiment, past week, slow streams only:<br>
-              <img class="img-fluid perf-img" id="week_slow_plot"></li>
+            <img class="img-fluid perf-img" id="week_slow_plot">
+          </li>
           <li>Current experiment, past two weeks, all streams:<br>
-              <img class="img-fluid perf-img" id="two_weeks_all_plot"></li>
+            <img class="img-fluid perf-img" id="two_weeks_all_plot">
+          </li>
           <li>Current experiment, past two weeks, slow streams only:<br>
-              <img class="img-fluid perf-img" id="two_weeks_slow_plot"></li>
+            <img class="img-fluid perf-img" id="two_weeks_slow_plot">
+          </li>
           <li>Current experiment, past month, all streams:<br>
-              <img class="img-fluid perf-img" id="month_all_plot"></li>
+            <img class="img-fluid perf-img" id="month_all_plot">
+          </li>
           <li>Current experiment, past month, slow streams only:<br>
-              <img class="img-fluid perf-img" id="month_slow_plot"></li>
+            <img class="img-fluid perf-img" id="month_slow_plot">
+          </li>
           <li>Current experiment, full contiguous duration, all streams:<br>
-              <img class="img-fluid perf-img" id="duration_all_plot"></li>
+            <img class="img-fluid perf-img" id="duration_all_plot">
+          </li>
           <li>Current experiment, full contiguous duration, slow streams only:<br>
-              <img class="img-fluid perf-img" id="duration_slow_plot"></li>
+            <img class="img-fluid perf-img" id="duration_slow_plot">
+          </li>
         </ul>
       </div>
     </div>

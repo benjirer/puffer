@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="{% static 'puffer/dist/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'puffer/css/common.css' %}">
-  <title>Puffer</title>
+  <title>Internet Test</title>
   <link rel="icon" href="{% static 'puffer/dist/images/favicon.ico' %}">
 </head>
 
@@ -61,7 +61,7 @@
           </tr>
         </thead>
         <tbody id="unshared-tokens">
-        {% for t in user.invitationtoken_set.all %}
+          {% for t in user.invitationtoken_set.all %}
           {% if not t.shared %}
           <tr>
             <td class="text-monospace">{{ t.token }}</td>
@@ -73,7 +73,7 @@
             </td>
           </tr>
           {% endif %}
-        {% endfor %}
+          {% endfor %}
         </tbody>
       </table>
 
@@ -86,7 +86,7 @@
           </tr>
         </thead>
         <tbody id="shared-tokens">
-        {% for t in user.invitationtoken_set.all %}
+          {% for t in user.invitationtoken_set.all %}
           {% if t.shared %}
           <tr>
             <td class="text-monospace">{{ t.token }}</td>
@@ -98,7 +98,7 @@
             </td>
           </tr>
           {% endif %}
-        {% endfor %}
+          {% endfor %}
         </tbody>
       </table>
     </div>
