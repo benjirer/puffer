@@ -11,7 +11,7 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BVWDMK20ZJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     gtag('config', 'G-BVWDMK20ZJ');
@@ -19,7 +19,7 @@
 
   <link rel="stylesheet" href="{% static 'puffer/dist/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'puffer/css/common.css' %}">
-  <title>Puffer</title>
+  <title>Internet Test</title>
   <link rel="icon" href="{% static 'puffer/dist/images/favicon.ico' %}">
 </head>
 
@@ -32,25 +32,25 @@
     <div class="container">
 
       <div class="text-center">
-        <img class="mb-4" src="{% static 'puffer/dist/images/logo-full.svg' %}"
-             alt="Puffer" height="160px">
+        <img class="mb-4" src="{% static 'puffer/dist/images/logo-full.svg' %}" alt="Puffer" height="160px">
       </div>
 
       <div class="row justify-content-md-center">
         <div class="col-md-6 text-justify">
 
-        <p>Stream live TV in your browser. There's no charge.
-           You can watch U.S. TV stations affiliated with the
-           NBC, CBS, ABC, PBS, Fox, and CW networks.</p>
+          <p>Stream live TV in your browser. There's no charge.
+            You can watch U.S. TV stations affiliated with the
+            NBC, CBS, ABC, PBS, Fox, and CW networks.</p>
 
-        <p>Puffer works well in the Chrome, Firefox, Edge, and Opera browsers,
-           on a computer or an Android phone or tablet.
-           Puffer <b>does not</b> work on iPhones or iPads or in the Safari browser.</p>
+          <p>Puffer works well in the Chrome, Firefox, Edge, and Opera browsers,
+            on a computer or an Android phone or tablet.
+            Puffer <b>does not</b> work on iPhones or iPads or in the Safari browser.</p>
 
-        <p>Puffer is a research project in the computer-science department at Stanford University.
-           Please see the <a href="{% url 'faq' %}">FAQ</a> and our
-           <a href="https://www.usenix.org/conference/nsdi20/presentation/yan">research paper</a>
-           (<em>Community Award</em> winner at USENIX NSDI 2020) for more information.</p>
+          <p>Puffer is a research project in the computer-science department at Stanford University.
+            Please see the <a href="{% url 'faq' %}">FAQ</a> and our
+            <a href="https://www.usenix.org/conference/nsdi20/presentation/yan">research paper</a>
+            (<em>Community Award</em> winner at USENIX NSDI 2020) for more information.
+          </p>
         </div>
       </div>
 
