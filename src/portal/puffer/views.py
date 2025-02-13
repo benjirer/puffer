@@ -17,11 +17,9 @@ from django.http import HttpResponseRedirect
 from django_ratelimit.decorators import ratelimit
 from accounts.models import InvitationToken
 from accounts.utils import random_token
-from django.utils import timezone
 from django.shortcuts import render
 from django_ratelimit.exceptions import Ratelimited
 from .models import Rating, GrafanaSnapshot, Participate
-from accounts.models import UserIPLog
 
 
 def handler403(request, exception=None):
@@ -110,16 +108,8 @@ def rate_limit_handler(request):
 @ratelimit(key="ip", rate="1/h", block=False)
 @login_required(login_url="/accounts/login/")
 def player(request):
-    # Get the client's IP
-    client_ip = get_client_ip(request)
-    
-    # Log the IP address in the database
-    UserIPLog.objects.create(
-        user=request.user,
-        ip_address=client_ip,
-        # timestamp is auto-set by auto_now_add
-    )
-    
+    if getattr(request, "limited", False):
+        return HttpResponseRedirect("/rate_limit_handler")
     # generate a random port or use a superuser-specified port
     port = None
     if request.user.is_superuser:

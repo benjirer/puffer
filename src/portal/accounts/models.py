@@ -20,8 +20,8 @@ class InvitationToken(models.Model):
             self.shared,
         )
 
-class UserIPLog(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+class ConnectionLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     ip_address = models.GenericIPAddressField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
