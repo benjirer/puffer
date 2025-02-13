@@ -30,7 +30,7 @@ def handler403(request, exception=None):
 
 
 def get_client_ip(request):
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FO
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     from accounts.models import UserIPLog
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0]
