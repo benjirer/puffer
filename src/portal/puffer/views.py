@@ -16,10 +16,11 @@ from functools import wraps
 from django.http import HttpResponseRedirect
 from django_ratelimit.decorators import ratelimit
 from accounts.models import InvitationToken
-from accounts.utils import random_token
+from accounts.utils import random_token, timezone
 from django.shortcuts import render
 from django_ratelimit.exceptions import Ratelimited
 from .models import Rating, GrafanaSnapshot, Participate
+from accounts.models import UserIPLog
 
 
 def handler403(request, exception=None):
@@ -29,7 +30,8 @@ def handler403(request, exception=None):
 
 
 def get_client_ip(request):
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FO
+    from accounts.models import UserIPLog
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0]
     else:
@@ -107,8 +109,16 @@ def rate_limit_handler(request):
 @ratelimit(key="ip", rate="1/h", block=False)
 @login_required(login_url="/accounts/login/")
 def player(request):
-    if getattr(request, "limited", False):
-        return HttpResponseRedirect("/rate_limit_handler")
+    # Get the client's IP
+    client_ip = get_client_ip(request)
+    
+    # Log the IP address in the database
+    UserIPLog.objects.create(
+        user=request.user,
+        ip_address=client_ip,
+        # timestamp is auto-set by auto_now_add
+    )
+    
     # generate a random port or use a superuser-specified port
     port = None
     if request.user.is_superuser:
