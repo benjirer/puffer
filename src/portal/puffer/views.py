@@ -16,7 +16,8 @@ from functools import wraps
 from django.http import HttpResponseRedirect
 from django_ratelimit.decorators import ratelimit
 from accounts.models import InvitationToken
-from accounts.utils import random_token, timezone
+from accounts.utils import random_token
+from django.utils import timezone
 from django.shortcuts import render
 from django_ratelimit.exceptions import Ratelimited
 from .models import Rating, GrafanaSnapshot, Participate
