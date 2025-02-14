@@ -458,9 +458,6 @@ function init_player(params_json, csrf_token) {
     var data = event.data;
     if (data.type === 'notification') {
       alert(data.message);
-    } else if (data.type === 'streaming_started') {
-      // Forward the streaming started message to the window
-      window.postMessage({ type: 'streaming_started' }, '*');
     }
   };
 

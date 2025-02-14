@@ -22,10 +22,6 @@ onmessage = function (event) {
                 this.ws_client.connect(data.channel);
             }
             break;
-        case 'streaming_started':
-            // Notify main thread that streaming has started
-            postMessage({ type: 'streaming_started' });
-            break;
         default:
             console.error('Unknown message type');
     }
