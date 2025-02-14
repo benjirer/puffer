@@ -64,6 +64,8 @@
     var interval;
     var isPaused = false;
     var alreadySet = false;
+    var countdownStarted = false;
+    var connectionTimeout;
 
     function updateMessage() {
       if (countdown <= 30) {
@@ -86,16 +88,28 @@
     }
 
     function startTimer() {
-      interval = setInterval(updateMessage, 1000);
+      if (!countdownStarted) {
+        countdownStarted = true;
+        clearTimeout(connectionTimeout);
+        interval = setInterval(updateMessage, 1000);
+      }
     }
 
-    function stopTimer() {
-      clearInterval(interval);
-    }
+    // Set 5-second timeout for connection
+    connectionTimeout = setTimeout(function() {
+      if (!countdownStarted) {
+        document.getElementById('session-message-f').innerHTML = "<h2 style='text-align: center;'>Unfortunately no connection could be established, please close this tab.</h2>";
+      }
+    }, 5000);
 
-    startTimer();
+    // Listen for streaming started message
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'streaming_started') {
+        startTimer();
+      }
+    });
 
+    // Initial connecting message
+    document.getElementById('session-message-f').innerHTML = "<h2 style='text-align: center;'>Connecting to server...<br>Please wait.</h2>";
   });
-
-
 </script>

@@ -73,6 +73,7 @@ function concat_arraybuffers(arr, len) {
 
 function AVSource(ws_client, server_init) {
     var that = this;
+    var first_packets_received = false;
 
     var channel = server_init.channel;
     const video_codec = server_init.videoCodec;
@@ -256,6 +257,12 @@ function AVSource(ws_client, server_init) {
         if (channel !== metadata.channel) {
             console.log('error: should have ignored data from incorrect channel');
             return;
+        }
+
+        // Check if this is the first time receiving packets
+        if (!first_packets_received) {
+            first_packets_received = true;
+            ws_client.notify_streaming_started();
         }
 
         /* New segment or server aborted sending */
@@ -1021,4 +1028,9 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
     //     }
     // }
     // setInterval(update_debug_info, 500);
+
+    this.notify_streaming_started = function() {
+        // Notify worker that streaming has started
+        postMessage({ type: 'streaming_started' });
+    };
 }
