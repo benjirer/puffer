@@ -458,6 +458,9 @@ function init_player(params_json, csrf_token) {
     var data = event.data;
     if (data.type === 'notification') {
       alert(data.message);
+    } else if (data.type === 'streamStarted') {
+      // Dispatch the event to the window when streaming starts
+      window.dispatchEvent(new Event('streamStarted'));
     }
   };
 

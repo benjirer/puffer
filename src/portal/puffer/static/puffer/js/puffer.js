@@ -709,6 +709,11 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
 
             /* create a new AVSource if it does not exist or unable to resume */
             av_source = new AVSource(that, metadata);
+            
+            // Notify the main thread that streaming has started
+            postMessage({
+                type: 'streamStarted'
+            });
         } else if (metadata.type === 'server-video') {
             if (!av_source) {
                 console.log('Error: AVSource is not initialized yet');
