@@ -64,7 +64,8 @@
     var interval;
     var isPaused = false;
     var alreadySet = false;
-    var countdownStarted = false;  // New flag to track if countdown has started
+    var countdownStarted = false;
+    var connectionTimeout;  // New variable for connection timeout
 
     function updateMessage() {
       if (countdown <= 30) {
@@ -86,6 +87,7 @@
 
     function startTimer() {
       if (!countdownStarted) {  // Only start if not already started
+        clearTimeout(connectionTimeout);  // Clear the timeout since connection succeeded
         interval = setInterval(updateMessage, 1000);
         countdownStarted = true;
       }
@@ -95,6 +97,14 @@
       clearInterval(interval);
       countdownStarted = false;
     }
+
+    // Set timeout for connection
+    connectionTimeout = setTimeout(function() {
+      if (!countdownStarted) {
+        document.getElementById('session-message-f').innerHTML = "<h2 style='text-align: center;'>Unfortunately the connection could not be established.<br>Please close this tab.</h2>";
+        document.getElementById('session-message-s').innerHTML = "";
+      }
+    }, 7000);
 
     // Create a custom event that will be triggered from puffer.js
     window.addEventListener('streamStarted', function() {
