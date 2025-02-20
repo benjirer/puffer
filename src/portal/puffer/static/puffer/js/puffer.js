@@ -979,7 +979,7 @@ function WebSocketClient(session_key, username_in, settings_debug, port_in,
         //     ws.close();
         // }
 
-        if (Date.now() - set_channel_ts > 180000) {
+        if (Date.now() - set_channel_ts > 360000) {
             // report_error(init_id, 'connection timed out');
             ws.close();
         }
