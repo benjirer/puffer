@@ -10,6 +10,7 @@ in our [research paper](https://www.usenix.org/conference/nsdi20/presentation/ya
 (*Community Award* winner at NSDI 2020),
 and in the [documentation](https://github.com/StanfordSNR/puffer/wiki/Documentation).
 
+## Our contribution:
 To perform distributed testing across different real-world environements, we adapted the original Puffer codebase 
 to allow for server and client deployments on cloud providers incl. AWS and Azure across the globe. Further, we
 enable using Amazon Mechanical Turks to collect performance data from real clients in different locations.
